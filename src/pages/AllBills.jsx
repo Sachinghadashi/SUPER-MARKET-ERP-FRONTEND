@@ -43,7 +43,7 @@ const AllBills = () => {
 
   /* ================= BILL TEXT ================= */
   const generateBillText = (bill) => {
-    let text = "🧾 Supermarket Bill\n\n";
+    let text = "Supermarket Bill\n\n";
     bill.items.forEach(i => {
       text += `${i.name} x${i.quantity} = ₹${i.total}\n`;
     });
@@ -75,26 +75,31 @@ const AllBills = () => {
     <div style={darkMode ? styles.pageDark : styles.page}>
       {/* Header */}
       <div style={styles.header}>
-        <h2>📜 All Bill History</h2>
+        <h2 style={styles.heading}>Billing History</h2>
         <div>
           <button style={styles.toggle} onClick={() => setDarkMode(!darkMode)}>
-            {darkMode ? "☀️ Light" : "🌙 Dark"}
-          </button>{" "}
+            {darkMode ? "Light" : "Dark"}
+          </button>
           <button style={styles.backBtn} onClick={() => navigate(-1)}>
-            🔙 Back
+            Back
           </button>
         </div>
       </div>
 
-      {error && <div style={styles.errorBox}>❌ {error}</div>}
+      {error && <div style={styles.errorBox}>{error}</div>}
 
       {/* Filters */}
       <div style={darkMode ? styles.cardDark : styles.card}>
-        <h3 style={styles.cardTitle}>🔍 Filters</h3>
+        <h4 style={styles.cardTitle}>Filters</h4>
         <div style={styles.filters}>
           <input type="date" value={date} onChange={e => setDate(e.target.value)} />
           <input type="month" value={month} onChange={e => setMonth(e.target.value)} />
-          <input type="number" placeholder="Year" value={year} onChange={e => setYear(e.target.value)} />
+          <input
+            type="number"
+            placeholder="Year"
+            value={year}
+            onChange={e => setYear(e.target.value)}
+          />
         </div>
       </div>
 
@@ -107,13 +112,13 @@ const AllBills = () => {
                 <th>Date & Time</th>
                 <th>Total (₹)</th>
                 <th>Payment</th>
-                <th>Actions</th>
+                <th style={{ textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: "center" }}>❌ No bills found</td>
+                  <td colSpan="4" style={styles.empty}>No bills found</td>
                 </tr>
               ) : (
                 filtered.map(b => (
@@ -121,11 +126,19 @@ const AllBills = () => {
                     <td>{new Date(b.createdAt).toLocaleString()}</td>
                     <td>₹{b.totalAmount}</td>
                     <td>{b.paymentMethod}</td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      <button style={styles.viewBtn} onClick={() => setSelectedBill(b)}>👁 View</button>{" "}
-                      <button style={styles.whatsappBtn} onClick={() => sendWhatsApp(b)}>WhatsApp</button>{" "}
-                      <button style={styles.emailBtn} onClick={() => sendEmail(b)}>Email</button>{" "}
-                      <button style={styles.smsBtn} onClick={() => sendSMS(b)}>SMS</button>
+                    <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                      <button style={styles.viewBtn} onClick={() => setSelectedBill(b)}>
+                        View
+                      </button>
+                      <button style={styles.whatsappBtn} onClick={() => sendWhatsApp(b)}>
+                        WhatsApp
+                      </button>
+                      <button style={styles.emailBtn} onClick={() => sendEmail(b)}>
+                        Email
+                      </button>
+                      <button style={styles.smsBtn} onClick={() => sendSMS(b)}>
+                        SMS
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -139,17 +152,19 @@ const AllBills = () => {
       {selectedBill && (
         <div style={styles.overlay}>
           <div style={styles.modal}>
-            <h3>🧾 Supermarket Bill</h3>
+            <h3>Invoice</h3>
             <p><b>Date:</b> {new Date(selectedBill.createdAt).toLocaleString()}</p>
             <p><b>Payment:</b> {selectedBill.paymentMethod}</p>
             <hr />
             {selectedBill.items.map((i, idx) => (
-              <div key={idx}>{i.name} × {i.quantity} = ₹{i.total}</div>
+              <div key={idx}>
+                {i.name} × {i.quantity} = ₹{i.total}
+              </div>
             ))}
             <hr />
             <h3>Total: ₹{selectedBill.totalAmount}</h3>
             <button style={styles.closeBtn} onClick={() => setSelectedBill(null)}>
-              ❌ Close
+              Close
             </button>
           </div>
         </div>
@@ -160,7 +175,6 @@ const AllBills = () => {
 
 export default AllBills;
 
-/* ================= STYLES ================= */
 
 const styles = {
   page: { padding: 20, background: "#f8fafc", minHeight: "100vh" },
@@ -170,15 +184,22 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 16,
     flexWrap: "wrap",
+  },
+
+  heading: {
+    fontSize: "22px",
+    fontWeight: "700",
+    color: "#0f172a",
   },
 
   toggle: {
     padding: "6px 10px",
     marginRight: 8,
     borderRadius: 6,
-    border: "none",
+    border: "1px solid #cbd5e1",
+    background: "#fff",
     cursor: "pointer",
   },
 
@@ -195,24 +216,24 @@ const styles = {
     background: "#fee2e2",
     color: "#b91c1c",
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 6,
     marginBottom: 10,
   },
 
   card: {
     background: "#fff",
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 15,
-    marginBottom: 15,
-    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+    marginBottom: 16,
+    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
   },
 
   cardDark: {
     background: "#020617",
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 15,
-    marginBottom: 15,
-    boxShadow: "0 8px 20px rgba(0,0,0,0.6)",
+    marginBottom: 16,
+    boxShadow: "0 6px 18px rgba(0,0,0,0.6)",
   },
 
   cardTitle: { marginBottom: 10 },
@@ -226,12 +247,19 @@ const styles = {
   table: {
     width: "100%",
     borderCollapse: "collapse",
+    fontSize: "14px",
   },
 
-  viewBtn: { background: "#2563eb", color: "#fff", border: "none", borderRadius: 6, padding: "4px 8px" },
-  whatsappBtn: { background: "#22c55e", color: "#fff", border: "none", borderRadius: 6, padding: "4px 8px" },
-  emailBtn: { background: "#0ea5e9", color: "#fff", border: "none", borderRadius: 6, padding: "4px 8px" },
-  smsBtn: { background: "#f59e0b", color: "#fff", border: "none", borderRadius: 6, padding: "4px 8px" },
+  empty: {
+    textAlign: "center",
+    padding: 16,
+    color: "#64748b",
+  },
+
+  viewBtn: { background: "#2563eb", color: "#fff", border: "none", borderRadius: 5, padding: "5px 8px", marginRight: 4 },
+  whatsappBtn: { background: "#22c55e", color: "#fff", border: "none", borderRadius: 5, padding: "5px 8px", marginRight: 4 },
+  emailBtn: { background: "#0ea5e9", color: "#fff", border: "none", borderRadius: 5, padding: "5px 8px", marginRight: 4 },
+  smsBtn: { background: "#f59e0b", color: "#fff", border: "none", borderRadius: 5, padding: "5px 8px" },
 
   overlay: {
     position: "fixed",
@@ -251,7 +279,7 @@ const styles = {
   },
 
   closeBtn: {
-    marginTop: 10,
+    marginTop: 12,
     width: "100%",
     padding: 10,
     background: "#ef4444",

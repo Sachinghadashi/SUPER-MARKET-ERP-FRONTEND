@@ -11,7 +11,7 @@ const BillHistory = () => {
 
   /* ================= BILL TEXT ================= */
   const generateBillText = (bill) => {
-    let text = "🧾 Supermarket Bill\n\n";
+    let text = "Supermarket Bill\n\n";
 
     bill.items.forEach((i) => {
       text += `${i.name} x${i.quantity} = ₹${i.total}\n`;
@@ -34,31 +34,21 @@ const BillHistory = () => {
   const sendEmail = async (bill) => {
     const email = prompt("Enter customer email");
     if (!email) return;
-
-    await API.post("/notify/email", {
-      email,
-      billText: generateBillText(bill),
-    });
-
+    await API.post("/notify/email", { email, billText: generateBillText(bill) });
     alert("Bill sent via Email");
   };
 
   const sendSMS = async (bill) => {
-    const phone = prompt("Enter phone with country code (eg +91...)");
+    const phone = prompt("Enter phone number with country code");
     if (!phone) return;
-
-    await API.post("/notify/sms", {
-      phone,
-      billText: generateBillText(bill),
-    });
-
+    await API.post("/notify/sms", { phone, billText: generateBillText(bill) });
     alert("Bill sent via SMS");
   };
 
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h2 style={styles.title}>🧾 Bill History</h2>
+        <h2 style={styles.heading}>Bill History</h2>
 
         <div style={{ overflowX: "auto" }}>
           <table style={styles.table}>
@@ -67,14 +57,14 @@ const BillHistory = () => {
                 <th>Date & Time</th>
                 <th>Total (₹)</th>
                 <th>Payment</th>
-                <th>Actions</th>
+                <th style={{ textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {bills.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: "center" }}>
-                    ❌ No bills found
+                  <td colSpan="4" style={styles.empty}>
+                    No bills found
                   </td>
                 </tr>
               ) : (
@@ -83,25 +73,25 @@ const BillHistory = () => {
                     <td>{new Date(bill.createdAt).toLocaleString()}</td>
                     <td>₹{bill.totalAmount}</td>
                     <td>{bill.paymentMethod}</td>
-                    <td style={{ whiteSpace: "nowrap" }}>
+                    <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                       <button
                         style={styles.viewBtn}
                         onClick={() => setSelectedBill(bill)}
                       >
-                        👁 View
-                      </button>{" "}
+                        View
+                      </button>
                       <button
                         style={styles.whatsappBtn}
                         onClick={() => sendWhatsApp(bill)}
                       >
                         WhatsApp
-                      </button>{" "}
+                      </button>
                       <button
                         style={styles.emailBtn}
                         onClick={() => sendEmail(bill)}
                       >
                         Email
-                      </button>{" "}
+                      </button>
                       <button
                         style={styles.smsBtn}
                         onClick={() => sendSMS(bill)}
@@ -117,11 +107,11 @@ const BillHistory = () => {
         </div>
       </div>
 
-      {/* ================= VIEW BILL MODAL ================= */}
+      {/* ================= INVOICE MODAL ================= */}
       {selectedBill && (
         <div style={styles.overlay}>
           <div style={styles.modal}>
-            <h3 style={{ textAlign: "center" }}>🧾 Supermarket Bill</h3>
+            <h3 style={{ textAlign: "center" }}>Invoice</h3>
 
             <p>
               <b>Date:</b>{" "}
@@ -146,47 +136,58 @@ const BillHistory = () => {
               style={styles.closeBtn}
               onClick={() => setSelectedBill(null)}
             >
-              ❌ Close
+              Close
             </button>
           </div>
         </div>
       )}
-      {/* =================================================== */}
     </div>
   );
 };
 
 export default BillHistory;
 
-/* ================= STYLES ================= */
 
 const styles = {
   page: {
-    padding: 10,
+    padding: 16,
+    background: "#f8fafc",
+    minHeight: "100vh",
   },
 
   card: {
     background: "#ffffff",
-    padding: 15,
-    borderRadius: 12,
-    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+    padding: 16,
+    borderRadius: 10,
+    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
   },
 
-  title: {
-    marginBottom: 10,
+  heading: {
+    fontSize: "20px",
+    fontWeight: "700",
+    marginBottom: 12,
+    color: "#0f172a",
   },
 
   table: {
     width: "100%",
     borderCollapse: "collapse",
+    fontSize: "14px",
+  },
+
+  empty: {
+    textAlign: "center",
+    padding: 14,
+    color: "#64748b",
   },
 
   viewBtn: {
     background: "#2563eb",
     color: "#fff",
     border: "none",
-    borderRadius: 6,
-    padding: "4px 8px",
+    borderRadius: 5,
+    padding: "5px 8px",
+    marginRight: 4,
     cursor: "pointer",
   },
 
@@ -194,8 +195,9 @@ const styles = {
     background: "#22c55e",
     color: "#fff",
     border: "none",
-    borderRadius: 6,
-    padding: "4px 8px",
+    borderRadius: 5,
+    padding: "5px 8px",
+    marginRight: 4,
     cursor: "pointer",
   },
 
@@ -203,8 +205,9 @@ const styles = {
     background: "#0ea5e9",
     color: "#fff",
     border: "none",
-    borderRadius: 6,
-    padding: "4px 8px",
+    borderRadius: 5,
+    padding: "5px 8px",
+    marginRight: 4,
     cursor: "pointer",
   },
 
@@ -212,15 +215,15 @@ const styles = {
     background: "#f59e0b",
     color: "#fff",
     border: "none",
-    borderRadius: 6,
-    padding: "4px 8px",
+    borderRadius: 5,
+    padding: "5px 8px",
     cursor: "pointer",
   },
 
   overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.4)",
+    background: "rgba(0,0,0,0.45)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -235,7 +238,7 @@ const styles = {
   },
 
   closeBtn: {
-    marginTop: 10,
+    marginTop: 12,
     width: "100%",
     padding: 10,
     background: "#ef4444",

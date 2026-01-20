@@ -49,7 +49,7 @@ const Billing = () => {
   /* ================= ADD ITEM LOGIC ================= */
   const addItemToBill = (product) => {
     if (product.stock <= 0) {
-      alert(`❌ ${product.name} is OUT OF STOCK`);
+      alert(`${product.name} is out of stock`);
       return;
     }
 
@@ -57,7 +57,7 @@ const Billing = () => {
 
     if (existing) {
       if (existing.quantity + 1 > product.stock) {
-        alert(`❌ Only ${product.stock} items available`);
+        alert(`Only ${product.stock} items available`);
         return;
       }
 
@@ -83,7 +83,7 @@ const Billing = () => {
   const updateQty = (barcode, qty) => {
     const item = items.find(i => i.barcode === barcode);
     if (qty < 1 || qty > item.stock) {
-      alert(`❌ Only ${item.stock} items available`);
+      alert(`Only ${item.stock} items available`);
       return;
     }
 
@@ -120,7 +120,7 @@ const Billing = () => {
         paymentMethod,
       });
 
-      alert("✅ Bill Generated Successfully");
+      alert("Bill generated successfully");
       setItems([]);
       setPaymentMethod("cash");
     } catch (err) {
@@ -130,22 +130,21 @@ const Billing = () => {
 
   return (
     <div style={styles.page}>
-      <h2 style={styles.title}>🧾 Cashier Billing</h2>
+      <h2 style={styles.heading}>Cashier Billing</h2>
 
       {/* Scanner */}
       <div style={styles.card}>
-        <button style={styles.scanBtn} onClick={() => setScannerOn(true)}>
-          📷 Scan Barcode
+        <button style={styles.primaryBtn} onClick={() => setScannerOn(true)}>
+          Scan Barcode
         </button>
-
         {scannerOn && <div id="reader" style={styles.reader} />}
       </div>
 
       {/* Manual Add */}
       <div style={styles.card}>
-        <h3>⌨️ Manual Add</h3>
+        <h4 style={styles.sectionTitle}>Add Product</h4>
         <input
-          placeholder="Search product name or barcode"
+          placeholder="Search by product name or barcode"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={styles.searchInput}
@@ -159,21 +158,21 @@ const Billing = () => {
                   p.name.toLowerCase().includes(search.toLowerCase()) ||
                   p.barcode.includes(search)
               )
-              .slice(0, 5)
+              .slice(0, 6)
               .map(p => (
                 <div
                   key={p._id}
                   style={{
                     ...styles.dropdownItem,
-                    color: p.stock > 0 ? "#111" : "red",
+                    color: p.stock > 0 ? "#0f172a" : "#dc2626",
                   }}
                   onClick={() =>
                     p.stock > 0
                       ? (addItemToBill(p), setSearch(""))
-                      : alert("❌ Product out of stock")
+                      : alert("Product out of stock")
                   }
                 >
-                  {p.name} — ₹{p.price} ({p.stock})
+                  {p.name} — ₹{p.price} (Stock: {p.stock})
                 </div>
               ))}
           </div>
@@ -182,49 +181,53 @@ const Billing = () => {
 
       {/* Bill Table */}
       <div style={styles.card}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Qty</th>
-                <th>Total</th>
-                <th>Remove</th>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {items.map(i => (
+              <tr key={i.barcode}>
+                <td>{i.name}</td>
+                <td>₹{i.price}</td>
+                <td>
+                  <input
+                    type="number"
+                    min="1"
+                    value={i.quantity}
+                    onChange={e => updateQty(i.barcode, Number(e.target.value))}
+                    style={styles.qtyInput}
+                  />
+                </td>
+                <td>₹{i.price * i.quantity}</td>
+                <td>
+                  <button
+                    style={styles.removeBtn}
+                    onClick={() => removeItem(i.barcode)}
+                  >
+                    Remove
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {items.map(i => (
-                <tr key={i.barcode}>
-                  <td>{i.name}</td>
-                  <td>₹{i.price}</td>
-                  <td>
-                    <input
-                      type="number"
-                      min="1"
-                      value={i.quantity}
-                      onChange={e => updateQty(i.barcode, Number(e.target.value))}
-                      style={styles.qtyInput}
-                    />
-                  </td>
-                  <td>₹{i.price * i.quantity}</td>
-                  <td>
-                    <button style={styles.removeBtn} onClick={() => removeItem(i.barcode)}>
-                      ❌
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
 
-        <h3 style={styles.total}>Grand Total: ₹{total}</h3>
+        <div style={styles.totalBox}>
+          <span>Grand Total</span>
+          <span>₹{total}</span>
+        </div>
       </div>
 
       {/* Payment */}
       <div style={styles.card}>
-        <h3>💳 Payment Method</h3>
+        <h4 style={styles.sectionTitle}>Payment Method</h4>
         <label>
           <input
             type="radio"
@@ -244,7 +247,7 @@ const Billing = () => {
       </div>
 
       <button style={styles.generateBtn} onClick={generateBill}>
-        🧾 Generate Bill
+        Generate Bill
       </button>
     </div>
   );
@@ -252,41 +255,61 @@ const Billing = () => {
 
 export default Billing;
 
-/* ================= STYLES ================= */
 
 const styles = {
-  page: { padding: 10 },
-  title: { marginBottom: 10 },
-
-  card: {
-    background: "#fff",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 15,
-    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+  page: {
+    padding: 16,
+    background: "#f8fafc",
+    minHeight: "100vh",
   },
 
-  scanBtn: {
-    padding: "8px 14px",
-    borderRadius: 8,
+  heading: {
+    fontSize: "22px",
+    fontWeight: "700",
+    marginBottom: 14,
+    color: "#0f172a",
+  },
+
+  card: {
+    background: "#ffffff",
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 16,
+    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+  },
+
+  sectionTitle: {
+    fontSize: "15px",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+
+  primaryBtn: {
+    padding: "10px 14px",
+    borderRadius: 6,
     border: "none",
     background: "#2563eb",
     color: "#fff",
     cursor: "pointer",
   },
 
-  reader: { width: 280, marginTop: 10 },
+  reader: {
+    width: 280,
+    marginTop: 12,
+  },
 
   searchInput: {
     width: "100%",
-    padding: 8,
-    marginTop: 6,
+    padding: 10,
+    borderRadius: 6,
+    border: "1px solid #cbd5e1",
   },
 
   dropdown: {
-    border: "1px solid #ccc",
+    border: "1px solid #cbd5e1",
     borderRadius: 6,
-    marginTop: 5,
+    marginTop: 6,
+    background: "#fff",
   },
 
   dropdownItem: {
@@ -297,34 +320,40 @@ const styles = {
   table: {
     width: "100%",
     borderCollapse: "collapse",
+    fontSize: "14px",
   },
 
   qtyInput: {
     width: 60,
+    padding: 4,
   },
 
   removeBtn: {
     background: "#ef4444",
     color: "#fff",
     border: "none",
-    borderRadius: 6,
+    borderRadius: 5,
     padding: "4px 8px",
     cursor: "pointer",
   },
 
-  total: {
-    textAlign: "right",
-    marginTop: 10,
+  totalBox: {
+    display: "flex",
+    justifyContent: "space-between",
+    fontSize: "18px",
+    fontWeight: "700",
+    marginTop: 12,
   },
 
   generateBtn: {
     width: "100%",
-    padding: 12,
+    padding: 14,
     background: "#22c55e",
     color: "#fff",
     border: "none",
     borderRadius: 10,
     fontSize: 16,
+    fontWeight: "600",
     cursor: "pointer",
   },
 };

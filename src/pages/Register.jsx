@@ -30,8 +30,8 @@ const Register = () => {
       await API.post("/auth/register", form);
       setSuccess("User registered successfully");
       setTimeout(() => navigate("/login"), 1500);
-    } catch (err) {
-      setError("Registration failed. Try again.");
+    } catch {
+      setError("Registration failed. Please try again.");
     }
   };
 
@@ -39,46 +39,54 @@ const Register = () => {
     <div style={darkMode ? styles.pageDark : styles.page}>
       <div style={darkMode ? styles.cardDark : styles.card}>
 
-        {/* Dark Mode Toggle */}
-        <div style={styles.darkToggle} onClick={() => setDarkMode(!darkMode)}>
-          {darkMode ? "☀️ Light" : "🌙 Dark"}
+        {/* Header */}
+        <div style={styles.header}>
+          <div>
+            <h2 style={darkMode ? styles.titleDark : styles.title}>
+              Supermarket ERP
+            </h2>
+            <p style={styles.subtitle}>Create User Account</p>
+          </div>
+
+          <button
+            style={styles.modeBtn}
+            onClick={() => setDarkMode(!darkMode)}
+          >
+            {darkMode ? "☀️" : "🌙"}
+          </button>
         </div>
 
-        <h1 style={styles.logo}>🛒</h1>
-        <h2 style={darkMode ? styles.titleDark : styles.title}>
-          Supermarket ERP
-        </h2>
-        <p style={styles.subtitle}>Create a new user account</p>
-
         {/* Messages */}
-        {error && <div style={styles.errorBox}>❌ {error}</div>}
-        {success && <div style={styles.successBox}>✅ {success}</div>}
+        {error && <div style={styles.errorBox}>{error}</div>}
+        {success && <div style={styles.successBox}>{success}</div>}
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          <label style={styles.label}>Full Name</label>
           <input
             style={darkMode ? styles.inputDark : styles.input}
             name="name"
-            placeholder="👤 Full Name"
+            placeholder="Enter full name"
             onChange={handleChange}
             required
           />
 
+          <label style={styles.label}>Email</label>
           <input
             style={darkMode ? styles.inputDark : styles.input}
             type="email"
             name="email"
-            placeholder="📧 Email Address"
+            placeholder="Enter email address"
             onChange={handleChange}
             required
           />
 
-          {/* Password */}
+          <label style={styles.label}>Password</label>
           <div style={styles.passwordWrapper}>
             <input
               style={darkMode ? styles.inputDark : styles.input}
               type={showPassword ? "text" : "password"}
               name="password"
-              placeholder="🔒 Password"
+              placeholder="Enter password"
               onChange={handleChange}
               required
             />
@@ -86,10 +94,11 @@ const Register = () => {
               style={styles.eye}
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? "🙈" : "👁️"}
+              {showPassword ? "Hide" : "Show"}
             </span>
           </div>
 
+          <label style={styles.label}>Role</label>
           <select
             style={darkMode ? styles.selectDark : styles.select}
             name="role"
@@ -101,13 +110,12 @@ const Register = () => {
           </select>
 
           <button style={styles.button} type="submit">
-            Register
+            Create User
           </button>
         </form>
 
-        <p style={styles.loginText}>
-          Already have an account?
-          <a href="/login" style={styles.link}> Login</a>
+        <p style={styles.footer}>
+          Already registered? <a href="/login" style={styles.link}>Login</a>
         </p>
       </div>
     </div>
@@ -116,7 +124,6 @@ const Register = () => {
 
 export default Register;
 
-/* ================= STYLES ================= */
 
 const styles = {
   page: {
@@ -124,8 +131,7 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: "20px",
-    background: "linear-gradient(135deg, #22c55e, #3b82f6)",
+    background: "#f1f5f9",
   },
 
   pageDark: {
@@ -133,69 +139,70 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: "20px",
-    background: "linear-gradient(135deg, #020617, #0f172a)",
+    background: "#020617",
   },
 
   card: {
     width: "100%",
-    maxWidth: "420px",
+    maxWidth: "440px",
     background: "#ffffff",
-    padding: "35px 30px",
-    borderRadius: "16px",
-    textAlign: "center",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-    position: "relative",
+    padding: "32px",
+    borderRadius: "12px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
   },
 
   cardDark: {
     width: "100%",
-    maxWidth: "420px",
+    maxWidth: "440px",
     background: "#020617",
-    padding: "35px 30px",
-    borderRadius: "16px",
-    textAlign: "center",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.6)",
-    position: "relative",
+    padding: "32px",
+    borderRadius: "12px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
   },
 
-  darkToggle: {
-    position: "absolute",
-    top: "15px",
-    right: "15px",
-    fontSize: "13px",
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "22px",
+  },
+
+  modeBtn: {
+    border: "none",
+    background: "transparent",
+    fontSize: "18px",
     cursor: "pointer",
-    color: "#a5b4fc",
-  },
-
-  logo: {
-    fontSize: "46px",
-    marginBottom: "8px",
   },
 
   title: {
-    fontSize: "24px",
+    fontSize: "22px",
     fontWeight: "700",
-    color: "#111827",
+    color: "#0f172a",
   },
 
   titleDark: {
-    fontSize: "24px",
+    fontSize: "22px",
     fontWeight: "700",
     color: "#e5e7eb",
   },
 
   subtitle: {
-    fontSize: "14px",
-    color: "#9ca3af",
-    marginBottom: "18px",
+    fontSize: "13px",
+    color: "#64748b",
+  },
+
+  label: {
+    fontSize: "13px",
+    marginBottom: "6px",
+    color: "#64748b",
+    textAlign: "left",
   },
 
   errorBox: {
     background: "#fee2e2",
     color: "#b91c1c",
     padding: "10px",
-    borderRadius: "8px",
+    borderRadius: "6px",
     fontSize: "14px",
     marginBottom: "12px",
   },
@@ -204,7 +211,7 @@ const styles = {
     background: "#dcfce7",
     color: "#166534",
     padding: "10px",
-    borderRadius: "8px",
+    borderRadius: "6px",
     fontSize: "14px",
     marginBottom: "12px",
   },
@@ -215,42 +222,38 @@ const styles = {
   },
 
   input: {
-    width: "100%",
-    padding: "12px",
-    marginBottom: "15px",
-    borderRadius: "8px",
-    border: "1px solid #d1d5db",
-    fontSize: "15px",
+    padding: "11px",
+    borderRadius: "6px",
+    border: "1px solid #cbd5f5",
+    fontSize: "14px",
+    marginBottom: "14px",
   },
 
   inputDark: {
-    width: "100%",
-    padding: "12px",
-    marginBottom: "15px",
-    borderRadius: "8px",
+    padding: "11px",
+    borderRadius: "6px",
     border: "1px solid #334155",
     background: "#020617",
     color: "#e5e7eb",
-    fontSize: "15px",
+    fontSize: "14px",
+    marginBottom: "14px",
   },
 
   select: {
-    width: "100%",
-    padding: "12px",
-    marginBottom: "20px",
-    borderRadius: "8px",
-    border: "1px solid #d1d5db",
-    fontSize: "15px",
+    padding: "11px",
+    borderRadius: "6px",
+    border: "1px solid #cbd5f5",
+    fontSize: "14px",
+    marginBottom: "18px",
     background: "#fff",
   },
 
   selectDark: {
-    width: "100%",
-    padding: "12px",
-    marginBottom: "20px",
-    borderRadius: "8px",
+    padding: "11px",
+    borderRadius: "6px",
     border: "1px solid #334155",
-    fontSize: "15px",
+    fontSize: "14px",
+    marginBottom: "18px",
     background: "#020617",
     color: "#e5e7eb",
   },
@@ -261,31 +264,34 @@ const styles = {
 
   eye: {
     position: "absolute",
-    right: "12px",
-    top: "12px",
+    right: "10px",
+    top: "11px",
+    fontSize: "12px",
+    color: "#6366f1",
     cursor: "pointer",
-    fontSize: "18px",
   },
 
   button: {
+    marginTop: "6px",
     padding: "12px",
-    borderRadius: "8px",
+    borderRadius: "6px",
     border: "none",
-    background: "linear-gradient(135deg, #22c55e, #16a34a)",
-    color: "#ffffff",
-    fontSize: "16px",
+    background: "#4f46e5",
+    color: "#fff",
+    fontSize: "15px",
     fontWeight: "600",
     cursor: "pointer",
   },
 
-  loginText: {
-    marginTop: "18px",
-    fontSize: "14px",
-    color: "#9ca3af",
+  footer: {
+    marginTop: "20px",
+    textAlign: "center",
+    fontSize: "13px",
+    color: "#64748b",
   },
 
   link: {
-    color: "#22c55e",
+    color: "#4f46e5",
     fontWeight: "600",
     textDecoration: "none",
   },

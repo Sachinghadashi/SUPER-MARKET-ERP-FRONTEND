@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import API from "../api/api";
 import Products from "./Products";
-import BillHistory from "./BillHistory";
 import { useAuth } from "../context/AuthContext";
 
 const AdminDashboard = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const [summary, setSummary] = useState({
     totalRevenue: 0,
@@ -16,7 +15,6 @@ const AdminDashboard = () => {
   const [monthWise, setMonthWise] = useState([]);
   const [yearWise, setYearWise] = useState([]);
 
-  // 🔎 Filters
   const [dateFilter, setDateFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
@@ -41,133 +39,239 @@ const AdminDashboard = () => {
     }
   };
 
-  // 🔎 Apply filters
   const filteredDateWise = dateFilter
-    ? dateWise.filter((d) => d._id === dateFilter)
+    ? dateWise.filter(d => d._id === dateFilter)
     : dateWise;
 
   const filteredMonthWise = monthFilter
     ? monthWise.filter(
-        (m) =>
+        m =>
           `${m._id.year}-${String(m._id.month).padStart(2, "0")}` ===
           monthFilter
       )
     : monthWise;
 
   const filteredYearWise = yearFilter
-    ? yearWise.filter((y) => String(y._id.year) === yearFilter)
+    ? yearWise.filter(y => String(y._id.year) === yearFilter)
     : yearWise;
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>📊 Admin Dashboard</h1>
-      <button onClick={logout}>Logout</button>
-
-      <hr />
-
-      {/* ================= SUMMARY ================= */}
-      <div style={{ display: "flex", gap: 40 }}>
+    <div style={styles.page}>
+      {/* Top Bar */}
+      <div style={styles.header}>
         <div>
-          <h3>💰 Total Revenue</h3>
-          <h2>₹{summary.totalRevenue}</h2>
+          <h1 style={styles.title}>Admin Dashboard</h1>
+          <p style={styles.subtitle}>
+            Logged in as <b>{user?.name || "Admin"}</b>
+          </p>
         </div>
-        <div>
-          <h3>🧾 Total Bills</h3>
-          <h2>{summary.totalBills}</h2>
+
+        <button style={styles.logoutBtn} onClick={logout}>
+          Logout
+        </button>
+      </div>
+
+      {/* Summary */}
+      <div style={styles.summaryGrid}>
+        <div style={styles.summaryCard}>
+          <p style={styles.summaryLabel}>Total Revenue</p>
+          <h2 style={styles.summaryValue}>₹{summary.totalRevenue}</h2>
+        </div>
+
+        <div style={styles.summaryCard}>
+          <p style={styles.summaryLabel}>Total Bills</p>
+          <h2 style={styles.summaryValue}>{summary.totalBills}</h2>
         </div>
       </div>
 
-      <hr />
+      {/* Date Wise */}
+      <div style={styles.card}>
+        <h3 style={styles.cardTitle}>Date-wise Sales</h3>
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          style={styles.filterInput}
+        />
 
-      {/* ================= DATE WISE ================= */}
-      <h3>📅 Date-wise Sales</h3>
-      <input
-        type="date"
-        value={dateFilter}
-        onChange={(e) => setDateFilter(e.target.value)}
-      />
-
-      <table border="1" cellPadding="6" width="50%">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Revenue (₹)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredDateWise.map((d) => (
-            <tr key={d._id}>
-              <td>{d._id}</td>
-              <td>₹{d.totalRevenue}</td>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Revenue (₹)</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredDateWise.map((d) => (
+              <tr key={d._id}>
+                <td>{d._id}</td>
+                <td>₹{d.totalRevenue}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <hr />
+      {/* Month Wise */}
+      <div style={styles.card}>
+        <h3 style={styles.cardTitle}>Month-wise Sales</h3>
+        <input
+          type="month"
+          value={monthFilter}
+          onChange={(e) => setMonthFilter(e.target.value)}
+          style={styles.filterInput}
+        />
 
-      {/* ================= MONTH WISE ================= */}
-      <h3>📆 Month-wise Sales</h3>
-      <input
-        type="month"
-        value={monthFilter}
-        onChange={(e) => setMonthFilter(e.target.value)}
-      />
-
-      <table border="1" cellPadding="6" width="50%">
-        <thead>
-          <tr>
-            <th>Month / Year</th>
-            <th>Revenue (₹)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredMonthWise.map((m, index) => (
-            <tr key={index}>
-              <td>
-                {m._id.month}/{m._id.year}
-              </td>
-              <td>₹{m.totalRevenue}</td>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th>Month / Year</th>
+              <th>Revenue (₹)</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredMonthWise.map((m, idx) => (
+              <tr key={idx}>
+                <td>{m._id.month}/{m._id.year}</td>
+                <td>₹{m.totalRevenue}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <hr />
+      {/* Year Wise */}
+      <div style={styles.card}>
+        <h3 style={styles.cardTitle}>Year-wise Sales</h3>
+        <input
+          type="number"
+          placeholder="Enter year"
+          value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value)}
+          style={styles.filterInput}
+        />
 
-      {/* ================= YEAR WISE ================= */}
-      <h3>📈 Year-wise Sales</h3>
-      <input
-        type="number"
-        placeholder="Enter year (e.g. 2025)"
-        value={yearFilter}
-        onChange={(e) => setYearFilter(e.target.value)}
-      />
-
-      <table border="1" cellPadding="6" width="50%">
-        <thead>
-          <tr>
-            <th>Year</th>
-            <th>Revenue (₹)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredYearWise.map((y) => (
-            <tr key={y._id.year}>
-              <td>{y._id.year}</td>
-              <td>₹{y.totalRevenue}</td>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Revenue (₹)</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredYearWise.map((y) => (
+              <tr key={y._id.year}>
+                <td>{y._id.year}</td>
+                <td>₹{y.totalRevenue}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <hr />
-
-      {/* ================= PRODUCT MANAGEMENT ================= */}
-      <h2>📦 Product Management</h2>
-      <Products />
+      {/* Product Management */}
+      <div style={styles.card}>
+        <h2 style={styles.cardTitle}>Product Management</h2>
+        <Products />
+      </div>
     </div>
   );
 };
 
 export default AdminDashboard;
+
+
+const styles = {
+  page: {
+    padding: 20,
+    background: "#f1f5f9",
+    minHeight: "100vh",
+  },
+
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    flexWrap: "wrap",
+    gap: 10,
+  },
+
+  title: {
+    fontSize: "26px",
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+
+  subtitle: {
+    fontSize: "13px",
+    color: "#64748b",
+    marginTop: 4,
+  },
+
+  logoutBtn: {
+    padding: "8px 16px",
+    borderRadius: 6,
+    border: "none",
+    background: "#dc2626",
+    color: "#fff",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+
+  summaryGrid: {
+    display: "flex",
+    gap: 20,
+    marginBottom: 20,
+    flexWrap: "wrap",
+  },
+
+  summaryCard: {
+    background: "#ffffff",
+    padding: 20,
+    borderRadius: 12,
+    flex: 1,
+    minWidth: 200,
+    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+  },
+
+  summaryLabel: {
+    fontSize: "13px",
+    color: "#64748b",
+  },
+
+  summaryValue: {
+    fontSize: "24px",
+    fontWeight: "700",
+    marginTop: 6,
+    color: "#0f172a",
+  },
+
+  card: {
+    background: "#ffffff",
+    padding: 18,
+    borderRadius: 12,
+    marginBottom: 20,
+    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+  },
+
+  cardTitle: {
+    fontSize: "18px",
+    fontWeight: "600",
+    marginBottom: 10,
+    color: "#1f2937",
+  },
+
+  filterInput: {
+    padding: 8,
+    borderRadius: 6,
+    border: "1px solid #cbd5e1",
+    marginBottom: 10,
+  },
+
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: "14px",
+  },
+};

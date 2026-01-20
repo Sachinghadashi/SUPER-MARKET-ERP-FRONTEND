@@ -4,34 +4,44 @@ import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 
 const CashierDashboard = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   return (
     <div style={styles.page}>
-      {/* Header */}
+      {/* Top Bar */}
       <div style={styles.header}>
-        <h1 style={styles.title}>👨‍💼 Cashier Dashboard</h1>
+        <div>
+          <h1 style={styles.title}>Cashier Dashboard</h1>
+          <p style={styles.subtitle}>
+            Logged in as: <b>{user?.name || "Cashier"}</b>
+          </p>
+        </div>
+
         <button style={styles.logoutBtn} onClick={logout}>
-          🚪 Logout
+          Logout
         </button>
       </div>
 
       {/* Billing Section */}
       <div style={styles.card}>
-        <h2 style={styles.cardTitle}>🧾 Billing</h2>
+        <div style={styles.cardHeader}>
+          <h2 style={styles.cardTitle}>Billing</h2>
+        </div>
         <Billing />
       </div>
 
       {/* Today Bills */}
       <div style={styles.card}>
-        <h2 style={styles.cardTitle}>📅 Today’s Bills</h2>
+        <div style={styles.cardHeader}>
+          <h2 style={styles.cardTitle}>Today’s Bills</h2>
+        </div>
         <TodayBills />
       </div>
 
-      {/* View All Bills */}
+      {/* Footer Navigation */}
       <div style={styles.footer}>
         <Link to="/bills" style={styles.link}>
-          📜 View All Bill History
+          View Full Bill History →
         </Link>
       </div>
     </div>
@@ -40,13 +50,12 @@ const CashierDashboard = () => {
 
 export default CashierDashboard;
 
-/* ================= STYLES ================= */
 
 const styles = {
   page: {
     minHeight: "100vh",
     padding: "20px",
-    background: "#f8fafc",
+    background: "#f1f5f9",
   },
 
   header: {
@@ -59,33 +68,45 @@ const styles = {
   },
 
   title: {
-    fontSize: "24px",
+    fontSize: "26px",
     fontWeight: "700",
-    color: "#111827",
+    color: "#0f172a",
+  },
+
+  subtitle: {
+    fontSize: "13px",
+    color: "#64748b",
+    marginTop: "4px",
   },
 
   logoutBtn: {
-    padding: "8px 14px",
-    borderRadius: "8px",
+    padding: "8px 16px",
+    borderRadius: "6px",
     border: "none",
-    background: "#ef4444",
+    background: "#dc2626",
     color: "#ffffff",
     fontSize: "14px",
+    fontWeight: "600",
     cursor: "pointer",
   },
 
   card: {
     background: "#ffffff",
-    borderRadius: "14px",
-    padding: "20px",
+    borderRadius: "12px",
+    padding: "18px",
     marginBottom: "20px",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+  },
+
+  cardHeader: {
+    borderBottom: "1px solid #e5e7eb",
+    marginBottom: "14px",
+    paddingBottom: "8px",
   },
 
   cardTitle: {
     fontSize: "18px",
     fontWeight: "600",
-    marginBottom: "15px",
     color: "#1f2937",
   },
 

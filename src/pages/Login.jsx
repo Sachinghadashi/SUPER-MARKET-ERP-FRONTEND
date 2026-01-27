@@ -82,6 +82,14 @@ const Login = () => {
             Login
           </button>
         </form>
+
+        {/* Register Option */}
+        <p style={styles.footer}>
+          Don’t have an account?{" "}
+          <Link to="/register" style={styles.link}>
+            Register
+          </Link>
+        </p>
       </div>
 
       {/* ================= FOOTER ================= */}

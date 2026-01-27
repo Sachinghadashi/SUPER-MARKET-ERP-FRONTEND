@@ -1,7 +1,7 @@
 import { useState } from "react";
 import API from "../api/api";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -30,24 +30,22 @@ const Login = () => {
 
   return (
     <div style={darkMode ? styles.pageDark : styles.page}>
+      {/* ================= HEADER ================= */}
+      <header style={styles.appHeader}>
+        <h2 style={styles.appTitle}>🏪 Supermarket ERP</h2>
+        <button
+          style={styles.modeBtn}
+          onClick={() => setDarkMode(!darkMode)}
+        >
+          {darkMode ? "☀️ Light" : "🌙 Dark"}
+        </button>
+      </header>
+
+      {/* ================= LOGIN CARD ================= */}
       <div style={darkMode ? styles.cardDark : styles.card}>
-
-        {/* Header */}
-        <div style={styles.header}>
-          <div>
-            <h2 style={darkMode ? styles.titleDark : styles.title}>
-              Supermarket ERP
-            </h2>
-            <p style={styles.subtitle}>Login to your account</p>
-          </div>
-
-          <button
-            style={styles.modeBtn}
-            onClick={() => setDarkMode(!darkMode)}
-          >
-            {darkMode ? "☀️" : "🌙"}
-          </button>
-        </div>
+        <h3 style={darkMode ? styles.titleDark : styles.title}>
+          Login to your account
+        </h3>
 
         {error && <div style={styles.errorBox}>{error}</div>}
 
@@ -84,42 +82,64 @@ const Login = () => {
             Login
           </button>
         </form>
-
-        {/* Register Option */}
-        <p style={styles.footer}>
-          Don’t have an account?{" "}
-          <Link to="/register" style={styles.link}>
-            Register
-          </Link>
-        </p>
       </div>
+
+      {/* ================= FOOTER ================= */}
+      <footer style={styles.appFooter}>
+        © {new Date().getFullYear()} Supermarket ERP • Secure Login
+      </footer>
     </div>
   );
 };
 
 export default Login;
 
+/* ================= STYLES ================= */
 
 const styles = {
   page: {
     minHeight: "100vh",
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: "column",
+    justifyContent: "space-between",
     background: "#f1f5f9",
   },
 
   pageDark: {
     minHeight: "100vh",
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: "column",
+    justifyContent: "space-between",
     background: "#020617",
+  },
+
+  appHeader: {
+    padding: "14px 24px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    background: "#1e293b",
+    color: "#fff",
+  },
+
+  appTitle: {
+    margin: 0,
+    fontSize: "20px",
+    fontWeight: "700",
+  },
+
+  appFooter: {
+    textAlign: "center",
+    padding: "12px",
+    fontSize: "13px",
+    color: "#64748b",
+    background: "#f8fafc",
   },
 
   card: {
     width: "100%",
     maxWidth: "420px",
+    margin: "auto",
     background: "#ffffff",
     padding: "32px",
     borderRadius: "12px",
@@ -129,41 +149,27 @@ const styles = {
   cardDark: {
     width: "100%",
     maxWidth: "420px",
+    margin: "auto",
     background: "#020617",
     padding: "32px",
     borderRadius: "12px",
     boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
   },
 
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "22px",
-  },
-
-  modeBtn: {
-    border: "none",
-    background: "transparent",
-    fontSize: "18px",
-    cursor: "pointer",
-  },
-
   title: {
-    fontSize: "22px",
+    fontSize: "20px",
     fontWeight: "700",
     color: "#0f172a",
+    marginBottom: "20px",
+    textAlign: "center",
   },
 
   titleDark: {
-    fontSize: "22px",
+    fontSize: "20px",
     fontWeight: "700",
     color: "#e5e7eb",
-  },
-
-  subtitle: {
-    fontSize: "13px",
-    color: "#64748b",
+    marginBottom: "20px",
+    textAlign: "center",
   },
 
   label: {
@@ -218,7 +224,7 @@ const styles = {
   },
 
   button: {
-    marginTop: "6px",
+    marginTop: "10px",
     padding: "12px",
     borderRadius: "6px",
     border: "none",
@@ -229,16 +235,11 @@ const styles = {
     cursor: "pointer",
   },
 
-  footer: {
-    marginTop: "20px",
-    textAlign: "center",
-    fontSize: "13px",
-    color: "#64748b",
-  },
-
-  link: {
-    color: "#4f46e5",
-    fontWeight: "600",
-    textDecoration: "none",
+  modeBtn: {
+    border: "none",
+    background: "transparent",
+    fontSize: "14px",
+    color: "#fff",
+    cursor: "pointer",
   },
 };

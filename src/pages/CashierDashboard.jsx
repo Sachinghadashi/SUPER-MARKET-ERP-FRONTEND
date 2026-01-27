@@ -25,7 +25,7 @@ const CashierDashboard = () => {
       {/* Billing Section */}
       <div style={styles.card}>
         <div style={styles.cardHeader}>
-          <h2 style={styles.cardTitle}>Billing</h2>
+          {/* <h2 style={styles.cardTitle}>Billing</h2> */}
         </div>
         <Billing />
       </div>
@@ -33,7 +33,7 @@ const CashierDashboard = () => {
       {/* Today Bills */}
       <div style={styles.card}>
         <div style={styles.cardHeader}>
-          <h2 style={styles.cardTitle}>Today’s Bills</h2>
+          {/* <h2 style={styles.cardTitle}>Today’s Bills</h2> */}
         </div>
         <TodayBills />
       </div>

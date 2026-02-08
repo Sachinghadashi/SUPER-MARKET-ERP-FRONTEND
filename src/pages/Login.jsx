@@ -346,6 +346,31 @@ const Login = () => {
         </p>
       </div>
 
+      <hr style={{ margin: "20px 0" }} />
+
+<div style={{ textAlign: "center" }}>
+  <p style={{ fontSize: "14px", marginBottom: "8px" }}>
+    Are you a customer?
+  </p>
+
+  <div style={{ display: "flex", justifyContent: "center", gap: "15px" }}>
+    <a
+      href="/customer/login"
+      style={{ color: "#2563eb", fontWeight: "600" }}
+    >
+      Customer Login
+    </a>
+
+    <a
+      href="/customer/register"
+      style={{ color: "#16a34a", fontWeight: "600" }}
+    >
+      Customer Register
+    </a>
+  </div>
+</div>
+
+
       {/* ================= FOOTER ================= */}
       <footer style={styles.appFooter}>
         © {new Date().getFullYear()} Supermarket ERP • Secure Login

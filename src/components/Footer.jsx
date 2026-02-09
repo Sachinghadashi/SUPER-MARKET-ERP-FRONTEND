@@ -9,7 +9,7 @@ const Footer = () => {
         fontSize: 14,
       }}
     >
-      © {new Date().getFullYear()} Supermarket ERP • Built with Prabhakar Technologies
+      © {new Date().getFullYear()} Dilraj Kirana Store • Built with Prabhakar Technologies
     </footer>
   );
 };

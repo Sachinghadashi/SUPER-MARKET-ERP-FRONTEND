@@ -37,13 +37,6 @@ const CashierDashboard = () => {
         </div>
         <TodayBills />
       </div>
-
-      {/* Footer Navigation */}
-      <div style={styles.footer}>
-        <Link to="/bills" style={styles.link}>
-          View Full Bill History →
-        </Link>
-      </div>
     </div>
   );
 };

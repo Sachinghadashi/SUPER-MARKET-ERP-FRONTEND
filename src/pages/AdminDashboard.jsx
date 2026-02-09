@@ -79,21 +79,21 @@ const AdminDashboard = () => {
             onClick={() => navigate("/products")}
             style={styles.primaryBtn}
           >
-            📦 Products
+            📦 Products Management
           </button>
 
           <button
             onClick={() => navigate("/bills")}
             style={styles.billsBtn}
           >
-            🧾 All Bills
+            🧾 View All Bills
           </button>
 
           <button
             onClick={() => navigate("/bills?today=true")}
             style={styles.todayBtn}
           >
-            📅 Today’s Bills
+            📅 View Today’s Bills
           </button>
 
 
@@ -101,9 +101,8 @@ const AdminDashboard = () => {
             onClick={openPowerBI}
             style={styles.powerBiBtn}
           >
-            📊 Power BI
+            📊 View Power BI Report
           </button>
-
           <button style={styles.logoutBtn} onClick={logout}>
             Logout
           </button>

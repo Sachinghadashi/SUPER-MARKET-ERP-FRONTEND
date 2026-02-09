@@ -23,7 +23,7 @@ const Header = () => {
           navigate(user?.role === "admin" ? "/admin" : "/cashier")
         }
       >
-        🏪 Supermarket ERP
+        🏪 DILRAJ KIRANA STORE
       </div>
 
       {/* User Info */}

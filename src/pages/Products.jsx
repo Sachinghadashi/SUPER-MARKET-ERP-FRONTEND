@@ -23,9 +23,14 @@ const Products = () => {
   }, []);
 
   const fetchProducts = async () => {
+  try {
     const res = await API.get("/products");
     setProducts(res.data);
-  };
+  } catch {
+    alert("Failed to load products");
+  }
+};
+
 
   const deleteProduct = async (id) => {
     if (window.confirm("Delete this product?")) {

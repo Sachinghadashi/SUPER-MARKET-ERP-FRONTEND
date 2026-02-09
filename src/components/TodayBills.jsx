@@ -69,7 +69,7 @@ const TodayBills = () => {
       <h3>🧾 Today’s Bills</h3>
 
       {bills.length === 0 ? (
-        <p>No bills generated today</p>
+        <p>No bills generated today<br></br>आज कोणतीही बिले तयार झाली नाहीत</p>
       ) : (
         <table border="1" width="100%" cellPadding="6">
           <thead>
@@ -132,7 +132,7 @@ const TodayBills = () => {
             }}
           >
             <h3 style={{ textAlign: "center" }}>
-              🧾 Supermarket Bill
+              🧾 Dilraj Kirana Strore Invoice
             </h3>
 
             <p>

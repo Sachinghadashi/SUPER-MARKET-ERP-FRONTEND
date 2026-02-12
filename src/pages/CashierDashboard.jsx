@@ -1,41 +1,46 @@
 import Billing from "./Billing";
 import TodayBills from "../components/TodayBills";
+import MyBillsHistory from "../components/MyBillsHistory";
+
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
 
 const CashierDashboard = () => {
   const { logout, user } = useAuth();
 
   return (
     <div style={styles.page}>
-      {/* Top Bar */}
+      {/* Header */}
       <div style={styles.header}>
         <div>
           <h1 style={styles.title}>Cashier Dashboard</h1>
+
           <p style={styles.subtitle}>
-            Logged in as: <b>{user?.name || "Cashier"}</b>
+            Logged in as <b>{user?.name}</b>
           </p>
         </div>
 
-        <button style={styles.logoutBtn} onClick={logout}>
+        <button
+          style={styles.logoutBtn}
+          onClick={logout}
+        >
           Logout
         </button>
       </div>
 
-      {/* Billing Section */}
+      {/* Billing */}
       <div style={styles.card}>
-        <div style={styles.cardHeader}>
-          {/* <h2 style={styles.cardTitle}>Billing</h2> */}
-        </div>
         <Billing />
       </div>
 
       {/* Today Bills */}
       <div style={styles.card}>
-        <div style={styles.cardHeader}>
-          {/* <h2 style={styles.cardTitle}>Today’s Bills</h2> */}
-        </div>
+        <h3>📅 Today’s Bills</h3>
         <TodayBills />
+      </div>
+
+      {/* My Bills History */}
+      <div style={styles.card}>
+        <MyBillsHistory />
       </div>
     </div>
   );
@@ -43,11 +48,12 @@ const CashierDashboard = () => {
 
 export default CashierDashboard;
 
+/* ================= STYLES ================= */
 
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "20px",
+    padding: 20,
     background: "#f1f5f9",
   },
 
@@ -56,62 +62,33 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     flexWrap: "wrap",
-    marginBottom: "20px",
-    gap: "10px",
+    marginBottom: 20,
   },
 
   title: {
-    fontSize: "26px",
+    fontSize: 26,
     fontWeight: "700",
-    color: "#0f172a",
   },
 
   subtitle: {
-    fontSize: "13px",
+    fontSize: 13,
     color: "#64748b",
-    marginTop: "4px",
   },
 
   logoutBtn: {
-    padding: "8px 16px",
-    borderRadius: "6px",
-    border: "none",
     background: "#dc2626",
-    color: "#ffffff",
-    fontSize: "14px",
-    fontWeight: "600",
+    color: "#fff",
+    border: "none",
+    padding: "8px 14px",
+    borderRadius: 6,
     cursor: "pointer",
   },
 
   card: {
-    background: "#ffffff",
-    borderRadius: "12px",
-    padding: "18px",
-    marginBottom: "20px",
+    background: "#fff",
+    padding: 18,
+    borderRadius: 12,
+    marginBottom: 20,
     boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-  },
-
-  cardHeader: {
-    borderBottom: "1px solid #e5e7eb",
-    marginBottom: "14px",
-    paddingBottom: "8px",
-  },
-
-  cardTitle: {
-    fontSize: "18px",
-    fontWeight: "600",
-    color: "#1f2937",
-  },
-
-  footer: {
-    textAlign: "center",
-    marginTop: "10px",
-  },
-
-  link: {
-    fontSize: "15px",
-    color: "#2563eb",
-    fontWeight: "600",
-    textDecoration: "none",
   },
 };

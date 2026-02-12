@@ -1,65 +1,49 @@
 import { useEffect, useState } from "react";
 import API from "../api/api";
 
-const AllBills = () => {
+const MyBillsHistory = () => {
   const [bills, setBills] = useState([]);
 
   useEffect(() => {
-    loadBills();
+    loadMyBills();
   }, []);
 
-  /* ================= LOAD ALL BILLS ================= */
-
-  const loadBills = async () => {
+  const loadMyBills = async () => {
     try {
-      const res = await API.get("/sales");
+      const res = await API.get("/sales/my");
       setBills(res.data);
-    } catch {
+    } catch (err) {
       alert("Failed to load bills");
     }
   };
 
-  /* ================= VIEW BILL ================= */
-
+  // View Bill
   const viewBill = (bill) => {
-    if (!bill.items || bill.items.length === 0) {
-      alert("Bill items not found");
-      return;
-    }
-
-    const itemsText = bill.items
+    let itemsText = bill.items
       .map(
         (i) =>
-          `${i.name} x${i.quantity} = ₹${i.total}`
+          `${i.name}  x${i.quantity}  = ₹${i.total}`
       )
       .join("\n");
 
     alert(`
-🧾 BILL RECEIPT
-
 Bill No: ${bill.billNumber}
-Customer: ${bill.customerName || "Walk-in"}
 
 Items:
 ${itemsText}
 
------------------------
 Total: ₹${bill.totalAmount}
 Payment: ${bill.paymentMethod}
-
 Date: ${new Date(bill.createdAt).toLocaleString()}
     `);
   };
 
-  /* ================= WHATSAPP ================= */
-
+  // WhatsApp
   const sendWhatsApp = (bill) => {
     const msg = `
 🧾 BILL: ${bill.billNumber}
-
 Total: ₹${bill.totalAmount}
 Payment: ${bill.paymentMethod}
-
 Date: ${new Date(bill.createdAt).toLocaleDateString()}
     `;
 
@@ -70,15 +54,14 @@ Date: ${new Date(bill.createdAt).toLocaleDateString()}
   };
 
   return (
-    <div style={styles.page}>
-      <h2 style={styles.heading}>🧾 Bills History</h2>
+    <div style={styles.card}>
+      <h3 style={styles.title}>📜 My Bills History</h3>
 
-      <div style={styles.card}>
+      <div style={{ overflowX: "auto" }}>
         <table style={styles.table}>
           <thead>
             <tr>
               <th>Bill No</th>
-              <th>Customer</th>
               <th>Total</th>
               <th>Payment</th>
               <th>Date</th>
@@ -89,7 +72,7 @@ Date: ${new Date(bill.createdAt).toLocaleDateString()}
           <tbody>
             {bills.length === 0 ? (
               <tr>
-                <td colSpan="6" style={styles.empty}>
+                <td colSpan="5" style={styles.empty}>
                   No bills found
                 </td>
               </tr>
@@ -97,19 +80,10 @@ Date: ${new Date(bill.createdAt).toLocaleDateString()}
               bills.map((b) => (
                 <tr key={b._id}>
                   <td>{b.billNumber}</td>
-
-                  <td>
-                    {b.customerName || "Walk-in"}
-                  </td>
-
                   <td>₹{b.totalAmount}</td>
-
                   <td>{b.paymentMethod}</td>
-
                   <td>
-                    {new Date(
-                      b.createdAt
-                    ).toLocaleDateString()}
+                    {new Date(b.createdAt).toLocaleDateString()}
                   </td>
 
                   <td>
@@ -137,28 +111,20 @@ Date: ${new Date(bill.createdAt).toLocaleDateString()}
   );
 };
 
-export default AllBills;
+export default MyBillsHistory;
 
 /* ================= STYLES ================= */
 
 const styles = {
-  page: {
-    padding: 20,
-    background: "#f1f5f9",
-    minHeight: "100vh",
-  },
-
-  heading: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-
   card: {
     background: "#fff",
     padding: 16,
-    borderRadius: 8,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    borderRadius: 10,
+    boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
+  },
+
+  title: {
+    marginBottom: 12,
   },
 
   table: {
@@ -169,7 +135,7 @@ const styles = {
 
   empty: {
     textAlign: "center",
-    padding: 16,
+    padding: 12,
     color: "#64748b",
   },
 

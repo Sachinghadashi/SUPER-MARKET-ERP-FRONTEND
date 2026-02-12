@@ -1,16 +1,15 @@
+import { useEffect, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import { useEffect, useRef, useState } from "react";
 import API from "../api/api";
 
 const Billing = () => {
   const [items, setItems] = useState([]);
-  const [scannerOn, setScannerOn] = useState(false);
-
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
 
-  const scannerRef = useRef(null);
+  const [scanner, setScanner] = useState(null);
+  const [scanning, setScanning] = useState(false);
 
   /* ================= LOAD PRODUCTS ================= */
 
@@ -29,51 +28,67 @@ const Billing = () => {
 
   /* ================= SCANNER ================= */
 
-  useEffect(() => {
-    if (scannerOn) startScanner();
-    else stopScanner();
-
-    return () => stopScanner();
-  }, [scannerOn]);
-
   const startScanner = async () => {
-    if (!scannerRef.current) {
-      scannerRef.current = new Html5Qrcode("reader");
-    }
-
     try {
-      await scannerRef.current.start(
-        { facingMode: "environment" }, // Back camera
+      const html5QrCode = new Html5Qrcode("reader");
+
+      setScanner(html5QrCode);
+
+      const devices = await Html5Qrcode.getCameras();
+
+      if (!devices || devices.length === 0) {
+        alert("No camera found");
+        return;
+      }
+
+      // Prefer Back Camera
+      const backCam =
+        devices.find((d) =>
+          d.label.toLowerCase().includes("back")
+        ) || devices[0];
+
+      await html5QrCode.start(
+        backCam.id,
         {
-          fps: 10,
-          qrbox: 250,
+          fps: 15,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1,
+          disableFlip: false,
+          focusMode: "continuous",
         },
-        (decodedText) => {
-          handleScanSuccess(decodedText);
+
+        async (decodedText) => {
+          await stopScanner();
+          addProductByBarcode(decodedText);
         },
+
         () => {}
       );
+
+      setScanning(true);
     } catch (err) {
-      alert("Camera error. Please allow permission.");
       console.error(err);
+      alert("Camera error");
     }
   };
 
   const stopScanner = async () => {
     try {
-      if (scannerRef.current?.isScanning) {
-        await scannerRef.current.stop();
-        await scannerRef.current.clear();
+      if (scanner) {
+        await scanner.stop();
+        await scanner.clear();
       }
     } catch {}
+
+    setScanning(false);
   };
 
-  const handleScanSuccess = async (barcode) => {
-    setScannerOn(false);
+  /* ================= BARCODE ================= */
 
+  const addProductByBarcode = async (barcode) => {
     try {
       const res = await API.get(`/products/barcode/${barcode}`);
-      addItemToBill(res.data);
+      addItem(res.data);
     } catch {
       alert("Product not found");
     }
@@ -81,13 +96,15 @@ const Billing = () => {
 
   /* ================= ADD ITEM ================= */
 
-  const addItemToBill = (product) => {
+  const addItem = (product) => {
     if (product.stock <= 0) {
       alert("Out of stock");
       return;
     }
 
-    const existing = items.find((i) => i.barcode === product.barcode);
+    const existing = items.find(
+      (i) => i.barcode === product.barcode
+    );
 
     if (existing) {
       if (existing.quantity + 1 > product.stock) {
@@ -116,7 +133,7 @@ const Billing = () => {
     }
   };
 
-  /* ================= QTY ================= */
+  /* ================= UPDATE QTY ================= */
 
   const updateQty = (barcode, qty) => {
     const item = items.find((i) => i.barcode === barcode);
@@ -124,13 +141,15 @@ const Billing = () => {
     if (!item) return;
 
     if (qty < 1 || qty > item.stock) {
-      alert(`Only ${item.stock} available`);
+      alert("Invalid quantity");
       return;
     }
 
     setItems((prev) =>
       prev.map((i) =>
-        i.barcode === barcode ? { ...i, quantity: qty } : i
+        i.barcode === barcode
+          ? { ...i, quantity: qty }
+          : i
       )
     );
   };
@@ -138,20 +157,35 @@ const Billing = () => {
   /* ================= REMOVE ================= */
 
   const removeItem = (barcode) => {
-    setItems((prev) => prev.filter((i) => i.barcode !== barcode));
+    setItems((prev) =>
+      prev.filter((i) => i.barcode !== barcode)
+    );
   };
 
   /* ================= TOTAL ================= */
 
-  const total = items.reduce(
+  const subTotal = items.reduce(
     (sum, i) => sum + i.price * i.quantity,
     0
   );
 
-  /* ================= BILL ================= */
+  const total = subTotal;
+
+  /* ================= GENERATE BILL ================= */
 
   const generateBill = async () => {
-    if (items.length === 0) return alert("No items");
+    if (items.length === 0) {
+      alert("No items added");
+      return;
+    }
+
+    const ok = window.confirm(`
+Items: ${items.length}
+Total: ₹${total}
+Payment: ${paymentMethod}
+`);
+
+    if (!ok) return;
 
     try {
       await API.post("/sales", {
@@ -162,15 +196,15 @@ const Billing = () => {
         paymentMethod,
       });
 
-      alert("Bill Generated");
+      alert("✅ Bill Generated");
 
       setItems([]);
-      setPaymentMethod("cash");
       setSearch("");
+      setPaymentMethod("cash");
 
       loadProducts();
     } catch (err) {
-      alert("Billing failed");
+      alert(err.response?.data?.message || "Failed");
     }
   };
 
@@ -178,27 +212,40 @@ const Billing = () => {
 
   return (
     <div style={styles.page}>
-      <h2>🧾 Cashier Billing</h2>
+      <h2 style={styles.heading}>🧾 Cashier Billing</h2>
 
       {/* Scanner */}
       <div style={styles.card}>
         <button
           style={styles.primaryBtn}
-          onClick={() => setScannerOn(!scannerOn)}
+          onClick={startScanner}
         >
-          {scannerOn ? "Stop Scanner" : "Scan Barcode"}
+          📷 Scan Barcode
         </button>
 
-        {scannerOn && <div id="reader" style={styles.reader}></div>}
+        {scanning && (
+          <>
+            <div id="reader" style={styles.reader} />
+
+            <button
+              onClick={stopScanner}
+              style={styles.stopBtn}
+            >
+              ❌ Stop Scan
+            </button>
+          </>
+        )}
       </div>
 
       {/* Search */}
       <div style={styles.card}>
+        <h4>Add Product</h4>
+
         <input
-          placeholder="Search product"
+          placeholder="Search name / barcode"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={styles.search}
+          style={styles.searchInput}
         />
 
         {search && (
@@ -206,20 +253,22 @@ const Billing = () => {
             {products
               .filter(
                 (p) =>
-                  p.name.toLowerCase().includes(search.toLowerCase()) ||
+                  p.name
+                    .toLowerCase()
+                    .includes(search.toLowerCase()) ||
                   p.barcode.includes(search)
               )
-              .slice(0, 5)
+              .slice(0, 6)
               .map((p) => (
                 <div
                   key={p._id}
                   style={styles.dropdownItem}
                   onClick={() => {
-                    addItemToBill(p);
+                    addItem(p);
                     setSearch("");
                   }}
                 >
-                  {p.name} - ₹{p.price}
+                  {p.name} — ₹{p.price} (Stock: {p.stock})
                 </div>
               ))}
           </div>
@@ -228,14 +277,14 @@ const Billing = () => {
 
       {/* Table */}
       <div style={styles.card}>
-        <table width="100%">
+        <table style={styles.table}>
           <thead>
             <tr>
               <th>Item</th>
               <th>₹</th>
               <th>Qty</th>
               <th>Total</th>
-              <th></th>
+              <th />
             </tr>
           </thead>
 
@@ -251,9 +300,12 @@ const Billing = () => {
                     value={i.quantity}
                     min="1"
                     onChange={(e) =>
-                      updateQty(i.barcode, Number(e.target.value))
+                      updateQty(
+                        i.barcode,
+                        Number(e.target.value)
+                      )
                     }
-                    style={{ width: 50 }}
+                    style={styles.qtyInput}
                   />
                 </td>
 
@@ -262,7 +314,9 @@ const Billing = () => {
                 <td>
                   <button
                     style={styles.removeBtn}
-                    onClick={() => removeItem(i.barcode)}
+                    onClick={() =>
+                      removeItem(i.barcode)
+                    }
                   >
                     ✖
                   </button>
@@ -272,35 +326,48 @@ const Billing = () => {
           </tbody>
         </table>
 
-        <h3>Total: ₹{total}</h3>
+        <div style={styles.totalBox}>
+          <b>Grand Total</b>
+          <b>₹{total}</b>
+        </div>
       </div>
 
       {/* Payment */}
       <div style={styles.card}>
+        <h4>Payment Method</h4>
+
         <label>
           <input
             type="radio"
             value="cash"
             checked={paymentMethod === "cash"}
-            onChange={(e) => setPaymentMethod(e.target.value)}
+            onChange={(e) =>
+              setPaymentMethod(e.target.value)
+            }
           />{" "}
           Cash
         </label>{" "}
-        &nbsp;
+        &nbsp;&nbsp;
 
         <label>
           <input
             type="radio"
             value="upi"
             checked={paymentMethod === "upi"}
-            onChange={(e) => setPaymentMethod(e.target.value)}
+            onChange={(e) =>
+              setPaymentMethod(e.target.value)
+            }
           />{" "}
           UPI
         </label>
       </div>
 
-      <button style={styles.generateBtn} onClick={generateBill}>
-        Generate Bill
+      {/* Generate */}
+      <button
+        style={styles.generateBtn}
+        onClick={generateBill}
+      >
+        ✅ Generate Bill
       </button>
     </div>
   );
@@ -312,55 +379,92 @@ export default Billing;
 
 const styles = {
   page: {
-    padding: 16,
+    padding: 14,
     background: "#f8fafc",
     minHeight: "100vh",
+  },
+
+  heading: {
+    fontSize: 22,
+    fontWeight: 700,
+    marginBottom: 12,
   },
 
   card: {
     background: "#fff",
     padding: 14,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 14,
+    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
   },
 
   primaryBtn: {
+    padding: 10,
     width: "100%",
-    padding: 12,
     background: "#2563eb",
     color: "#fff",
     border: "none",
     borderRadius: 6,
-    fontWeight: "600",
+    fontWeight: 600,
+  },
+
+  stopBtn: {
+    marginTop: 8,
+    width: "100%",
+    background: "#dc2626",
+    color: "#fff",
+    padding: 8,
+    border: "none",
+    borderRadius: 6,
+    fontWeight: 600,
   },
 
   reader: {
     width: "100%",
-    maxWidth: 300,
+    maxWidth: 280,
     margin: "10px auto",
   },
 
-  search: {
+  searchInput: {
     width: "100%",
     padding: 10,
+    borderRadius: 6,
+    border: "1px solid #ccc",
   },
 
   dropdown: {
-    border: "1px solid #ddd",
+    border: "1px solid #ccc",
     marginTop: 5,
   },
 
   dropdownItem: {
     padding: 8,
     cursor: "pointer",
+    borderBottom: "1px solid #eee",
+  },
+
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+  },
+
+  qtyInput: {
+    width: 50,
   },
 
   removeBtn: {
-    background: "red",
+    background: "#ef4444",
     color: "#fff",
     border: "none",
     padding: "4px 6px",
     borderRadius: 4,
+  },
+
+  totalBox: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginTop: 10,
+    fontSize: 18,
   },
 
   generateBtn: {
@@ -369,477 +473,8 @@ const styles = {
     background: "#22c55e",
     color: "#fff",
     border: "none",
-    borderRadius: 8,
-    fontWeight: "700",
+    borderRadius: 10,
+    fontSize: 16,
+    fontWeight: 700,
   },
 };
-
-
-
-
-// import { Html5QrcodeScanner } from "html5-qrcode";
-// import { useEffect, useRef, useState } from "react";
-// import API from "../api/api";
-
-// const Billing = () => {
-//   const [items, setItems] = useState([]);
-//   const [scannerOn, setScannerOn] = useState(false);
-
-//   const [products, setProducts] = useState([]);
-//   const [search, setSearch] = useState("");
-//   const [paymentMethod, setPaymentMethod] = useState("cash");
-
-//   const scannerRef = useRef(null);
-
-//   /* ================= LOAD PRODUCTS ================= */
-
-//   useEffect(() => {
-//     loadProducts();
-//   }, []);
-
-//   const loadProducts = async () => {
-//     try {
-//       const res = await API.get("/products");
-//       setProducts(res.data);
-//     } catch {
-//       alert("Failed to load products");
-//     }
-//   };
-
-//   /* ================= SCANNER ================= */
-
-//   useEffect(() => {
-//     if (!scannerOn) return;
-
-//     // Prevent multiple scanners
-//     if (scannerRef.current) return;
-
-//     const scanner = new Html5QrcodeScanner(
-//       "reader",
-//       { fps: 10, qrbox: 220 },
-//       false
-//     );
-
-//     scannerRef.current = scanner;
-
-//     scanner.render(
-//       async (decodedText) => {
-//         try {
-//           await scanner.clear();
-//         } catch {}
-
-//         scannerRef.current = null;
-//         setScannerOn(false);
-
-//         addProductByBarcode(decodedText);
-//       },
-//       () => {}
-//     );
-
-//     return () => {
-//       if (scannerRef.current) {
-//         scannerRef.current
-//           .clear()
-//           .catch(() => {})
-//           .finally(() => {
-//             scannerRef.current = null;
-//           });
-//       }
-//     };
-//   }, [scannerOn]);
-
-//   /* ================= BARCODE ================= */
-
-//   const addProductByBarcode = async (barcode) => {
-//     try {
-//       const res = await API.get(`/products/barcode/${barcode}`);
-//       addItem(res.data);
-//     } catch {
-//       alert("Product not found");
-//     }
-//   };
-
-//   /* ================= ADD ITEM ================= */
-
-//   const addItem = (product) => {
-//     if (product.stock <= 0) {
-//       alert(`${product.name} is out of stock`);
-//       return;
-//     }
-
-//     const existing = items.find(
-//       (i) => i.barcode === product.barcode
-//     );
-
-//     if (existing) {
-//       if (existing.quantity + 1 > product.stock) {
-//         alert(`Only ${product.stock} items available`);
-//         return;
-//       }
-
-//       setItems((prev) =>
-//         prev.map((i) =>
-//           i.barcode === product.barcode
-//             ? { ...i, quantity: i.quantity + 1 }
-//             : i
-//         )
-//       );
-//     } else {
-//       setItems((prev) => [
-//         ...prev,
-//         {
-//           barcode: product.barcode,
-//           name: product.name,
-//           price: product.price,
-//           quantity: 1,
-//           stock: product.stock,
-//         },
-//       ]);
-//     }
-//   };
-
-//   /* ================= UPDATE QTY ================= */
-
-//   const updateQty = (barcode, qty) => {
-//     const item = items.find((i) => i.barcode === barcode);
-
-//     if (!item) return;
-
-//     if (qty < 1 || qty > item.stock) {
-//       alert(`Only ${item.stock} items available`);
-//       return;
-//     }
-
-//     setItems((prev) =>
-//       prev.map((i) =>
-//         i.barcode === barcode
-//           ? { ...i, quantity: qty }
-//           : i
-//       )
-//     );
-//   };
-
-//   /* ================= REMOVE ================= */
-
-//   const removeItem = (barcode) => {
-//     setItems((prev) =>
-//       prev.filter((i) => i.barcode !== barcode)
-//     );
-//   };
-
-//   /* ================= TOTAL ================= */
-
-//   const total = items.reduce(
-//     (sum, i) => sum + i.price * i.quantity,
-//     0
-//   );
-
-//   /* ================= GENERATE ================= */
-
-//   const generateBill = async () => {
-//     if (items.length === 0) {
-//       alert("No items in bill");
-//       return;
-//     }
-
-//     const confirm = window.confirm(`
-// Items: ${items.length}
-// Total: ₹${total}
-// Payment: ${paymentMethod.toUpperCase()}
-//     `);
-
-//     if (!confirm) return;
-
-//     try {
-//       await API.post("/sales", {
-//         items: items.map((i) => ({
-//           barcode: i.barcode,
-//           quantity: i.quantity,
-//         })),
-//         paymentMethod,
-//       });
-
-//       alert("✅ Bill Generated");
-
-//       setItems([]);
-//       setPaymentMethod("cash");
-//       setSearch("");
-
-//       loadProducts();
-//     } catch (err) {
-//       alert(err.response?.data?.message || "Billing failed");
-//     }
-//   };
-
-//   /* ================= UI ================= */
-
-//   return (
-//     <div style={styles.page}>
-//       <h2 style={styles.heading}>🧾 Cashier Billing</h2>
-
-//       {/* Scanner */}
-//       <div style={styles.card}>
-//         <button
-//           style={styles.primaryBtn}
-//           onClick={() => {
-//             if (!scannerOn) setScannerOn(true);
-//           }}
-//         >
-//           📷 Scan Barcode
-//         </button>
-
-//         {scannerOn && (
-//           <div id="reader" style={styles.reader} />
-//         )}
-//       </div>
-
-//       {/* Manual Add */}
-//       <div style={styles.card}>
-//         <h4 style={styles.sectionTitle}>Add Product</h4>
-
-//         <input
-//           placeholder="Search name / barcode"
-//           value={search}
-//           onChange={(e) => setSearch(e.target.value)}
-//           style={styles.searchInput}
-//         />
-
-//         {search && (
-//           <div style={styles.dropdown}>
-//             {products
-//               .filter(
-//                 (p) =>
-//                   p.name
-//                     .toLowerCase()
-//                     .includes(search.toLowerCase()) ||
-//                   p.barcode.includes(search)
-//               )
-//               .slice(0, 6)
-//               .map((p) => (
-//                 <div
-//                   key={p._id}
-//                   style={{
-//                     ...styles.dropdownItem,
-//                     color:
-//                       p.stock > 0
-//                         ? "#0f172a"
-//                         : "#dc2626",
-//                   }}
-//                   onClick={() =>
-//                     p.stock > 0
-//                       ? (addItem(p), setSearch(""))
-//                       : alert("Out of stock")
-//                   }
-//                 >
-//                   {p.name} — ₹{p.price} (Stock:
-//                   {p.stock})
-//                 </div>
-//               ))}
-//           </div>
-//         )}
-//       </div>
-
-//       {/* Bill */}
-//       <div style={styles.card}>
-//         <table style={styles.table}>
-//           <thead>
-//             <tr>
-//               <th>Item</th>
-//               <th>₹</th>
-//               <th>Qty</th>
-//               <th>Total</th>
-//               <th />
-//             </tr>
-//           </thead>
-
-//           <tbody>
-//             {items.map((i) => (
-//               <tr key={i.barcode}>
-//                 <td>{i.name}</td>
-//                 <td>{i.price}</td>
-
-//                 <td>
-//                   <input
-//                     type="number"
-//                     min="1"
-//                     value={i.quantity}
-//                     onChange={(e) =>
-//                       updateQty(
-//                         i.barcode,
-//                         Number(e.target.value)
-//                       )
-//                     }
-//                     style={styles.qtyInput}
-//                   />
-//                 </td>
-
-//                 <td>₹{i.price * i.quantity}</td>
-
-//                 <td>
-//                   <button
-//                     style={styles.removeBtn}
-//                     onClick={() =>
-//                       removeItem(i.barcode)
-//                     }
-//                   >
-//                     ✖
-//                   </button>
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-
-//         <div style={styles.totalBoxMain}>
-//           <span>Grand Total</span>
-//           <span>₹{total}</span>
-//         </div>
-//       </div>
-
-//       {/* Payment */}
-//       <div style={styles.card}>
-//         <h4 style={styles.sectionTitle}>
-//           Payment Method
-//         </h4>
-
-//         <label>
-//           <input
-//             type="radio"
-//             value="cash"
-//             checked={paymentMethod === "cash"}
-//             onChange={(e) =>
-//               setPaymentMethod(e.target.value)
-//             }
-//           />{" "}
-//           Cash
-//         </label>{" "}
-//         &nbsp;&nbsp;
-
-//         <label>
-//           <input
-//             type="radio"
-//             value="upi"
-//             checked={paymentMethod === "upi"}
-//             onChange={(e) =>
-//               setPaymentMethod(e.target.value)
-//             }
-//           />{" "}
-//           UPI
-//         </label>
-//       </div>
-
-//       {/* Generate */}
-//       <button
-//         style={styles.generateBtn}
-//         onClick={generateBill}
-//       >
-//         ✅ Generate Bill
-//       </button>
-//     </div>
-//   );
-// };
-
-// export default Billing;
-
-// /* ================= STYLES ================= */
-
-// const styles = {
-//   page: {
-//     padding: 14,
-//     background: "#f8fafc",
-//     minHeight: "100vh",
-//   },
-
-//   heading: {
-//     fontSize: "22px",
-//     fontWeight: "700",
-//     marginBottom: 12,
-//   },
-
-//   card: {
-//     background: "#fff",
-//     padding: 14,
-//     borderRadius: 10,
-//     marginBottom: 14,
-//     boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
-//   },
-
-//   sectionTitle: {
-//     fontSize: "15px",
-//     fontWeight: "600",
-//     marginBottom: 6,
-//   },
-
-//   primaryBtn: {
-//     padding: "10px",
-//     width: "100%",
-//     background: "#2563eb",
-//     color: "#fff",
-//     border: "none",
-//     borderRadius: 6,
-//     fontWeight: "600",
-//   },
-
-//   reader: {
-//     width: "100%",
-//     maxWidth: 260,
-//     margin: "10px auto",
-//   },
-
-//   searchInput: {
-//     width: "100%",
-//     padding: 10,
-//     borderRadius: 6,
-//     border: "1px solid #cbd5e1",
-//   },
-
-//   dropdown: {
-//     border: "1px solid #cbd5e1",
-//     borderRadius: 6,
-//     marginTop: 6,
-//   },
-
-//   dropdownItem: {
-//     padding: 8,
-//     cursor: "pointer",
-//     borderBottom: "1px solid #eee",
-//   },
-
-//   table: {
-//     width: "100%",
-//     fontSize: "13px",
-//     borderCollapse: "collapse",
-//   },
-
-//   qtyInput: {
-//     width: 55,
-//     padding: 4,
-//   },
-
-//   removeBtn: {
-//     background: "#ef4444",
-//     color: "#fff",
-//     border: "none",
-//     borderRadius: 4,
-//     padding: "4px 6px",
-//   },
-
-//   totalBoxMain: {
-//     display: "flex",
-//     justifyContent: "space-between",
-//     marginTop: 8,
-//     fontSize: 18,
-//     fontWeight: "700",
-//   },
-
-//   generateBtn: {
-//     width: "100%",
-//     padding: 14,
-//     background: "#22c55e",
-//     color: "#fff",
-//     border: "none",
-//     borderRadius: 10,
-//     fontSize: 16,
-//     fontWeight: "700",
-//   },
-// };

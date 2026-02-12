@@ -1,4 +1,4 @@
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { useEffect, useRef, useState } from "react";
 import API from "../api/api";
 
@@ -30,51 +30,50 @@ const Billing = () => {
   /* ================= SCANNER ================= */
 
   useEffect(() => {
-    if (!scannerOn) return;
+    if (scannerOn) startScanner();
+    else stopScanner();
 
-    // Prevent multiple scanners
-    if (scannerRef.current) return;
-
-    const scanner = new Html5QrcodeScanner(
-      "reader",
-      { fps: 10, qrbox: 220 },
-      false
-    );
-
-    scannerRef.current = scanner;
-
-    scanner.render(
-      async (decodedText) => {
-        try {
-          await scanner.clear();
-        } catch {}
-
-        scannerRef.current = null;
-        setScannerOn(false);
-
-        addProductByBarcode(decodedText);
-      },
-      () => {}
-    );
-
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current
-          .clear()
-          .catch(() => {})
-          .finally(() => {
-            scannerRef.current = null;
-          });
-      }
-    };
+    return () => stopScanner();
   }, [scannerOn]);
 
-  /* ================= BARCODE ================= */
+  const startScanner = async () => {
+    if (!scannerRef.current) {
+      scannerRef.current = new Html5Qrcode("reader");
+    }
 
-  const addProductByBarcode = async (barcode) => {
+    try {
+      await scannerRef.current.start(
+        { facingMode: "environment" }, // Back camera
+        {
+          fps: 10,
+          qrbox: 250,
+        },
+        (decodedText) => {
+          handleScanSuccess(decodedText);
+        },
+        () => {}
+      );
+    } catch (err) {
+      alert("Camera error. Please allow permission.");
+      console.error(err);
+    }
+  };
+
+  const stopScanner = async () => {
+    try {
+      if (scannerRef.current?.isScanning) {
+        await scannerRef.current.stop();
+        await scannerRef.current.clear();
+      }
+    } catch {}
+  };
+
+  const handleScanSuccess = async (barcode) => {
+    setScannerOn(false);
+
     try {
       const res = await API.get(`/products/barcode/${barcode}`);
-      addItem(res.data);
+      addItemToBill(res.data);
     } catch {
       alert("Product not found");
     }
@@ -82,19 +81,17 @@ const Billing = () => {
 
   /* ================= ADD ITEM ================= */
 
-  const addItem = (product) => {
+  const addItemToBill = (product) => {
     if (product.stock <= 0) {
-      alert(`${product.name} is out of stock`);
+      alert("Out of stock");
       return;
     }
 
-    const existing = items.find(
-      (i) => i.barcode === product.barcode
-    );
+    const existing = items.find((i) => i.barcode === product.barcode);
 
     if (existing) {
       if (existing.quantity + 1 > product.stock) {
-        alert(`Only ${product.stock} items available`);
+        alert("Stock limit reached");
         return;
       }
 
@@ -119,7 +116,7 @@ const Billing = () => {
     }
   };
 
-  /* ================= UPDATE QTY ================= */
+  /* ================= QTY ================= */
 
   const updateQty = (barcode, qty) => {
     const item = items.find((i) => i.barcode === barcode);
@@ -127,15 +124,13 @@ const Billing = () => {
     if (!item) return;
 
     if (qty < 1 || qty > item.stock) {
-      alert(`Only ${item.stock} items available`);
+      alert(`Only ${item.stock} available`);
       return;
     }
 
     setItems((prev) =>
       prev.map((i) =>
-        i.barcode === barcode
-          ? { ...i, quantity: qty }
-          : i
+        i.barcode === barcode ? { ...i, quantity: qty } : i
       )
     );
   };
@@ -143,9 +138,7 @@ const Billing = () => {
   /* ================= REMOVE ================= */
 
   const removeItem = (barcode) => {
-    setItems((prev) =>
-      prev.filter((i) => i.barcode !== barcode)
-    );
+    setItems((prev) => prev.filter((i) => i.barcode !== barcode));
   };
 
   /* ================= TOTAL ================= */
@@ -155,21 +148,10 @@ const Billing = () => {
     0
   );
 
-  /* ================= GENERATE ================= */
+  /* ================= BILL ================= */
 
   const generateBill = async () => {
-    if (items.length === 0) {
-      alert("No items in bill");
-      return;
-    }
-
-    const confirm = window.confirm(`
-Items: ${items.length}
-Total: ₹${total}
-Payment: ${paymentMethod.toUpperCase()}
-    `);
-
-    if (!confirm) return;
+    if (items.length === 0) return alert("No items");
 
     try {
       await API.post("/sales", {
@@ -180,7 +162,7 @@ Payment: ${paymentMethod.toUpperCase()}
         paymentMethod,
       });
 
-      alert("✅ Bill Generated");
+      alert("Bill Generated");
 
       setItems([]);
       setPaymentMethod("cash");
@@ -188,7 +170,7 @@ Payment: ${paymentMethod.toUpperCase()}
 
       loadProducts();
     } catch (err) {
-      alert(err.response?.data?.message || "Billing failed");
+      alert("Billing failed");
     }
   };
 
@@ -196,33 +178,27 @@ Payment: ${paymentMethod.toUpperCase()}
 
   return (
     <div style={styles.page}>
-      <h2 style={styles.heading}>🧾 Cashier Billing</h2>
+      <h2>🧾 Cashier Billing</h2>
 
       {/* Scanner */}
       <div style={styles.card}>
         <button
           style={styles.primaryBtn}
-          onClick={() => {
-            if (!scannerOn) setScannerOn(true);
-          }}
+          onClick={() => setScannerOn(!scannerOn)}
         >
-          📷 Scan Barcode
+          {scannerOn ? "Stop Scanner" : "Scan Barcode"}
         </button>
 
-        {scannerOn && (
-          <div id="reader" style={styles.reader} />
-        )}
+        {scannerOn && <div id="reader" style={styles.reader}></div>}
       </div>
 
-      {/* Manual Add */}
+      {/* Search */}
       <div style={styles.card}>
-        <h4 style={styles.sectionTitle}>Add Product</h4>
-
         <input
-          placeholder="Search name / barcode"
+          placeholder="Search product"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={styles.searchInput}
+          style={styles.search}
         />
 
         {search && (
@@ -230,46 +206,36 @@ Payment: ${paymentMethod.toUpperCase()}
             {products
               .filter(
                 (p) =>
-                  p.name
-                    .toLowerCase()
-                    .includes(search.toLowerCase()) ||
+                  p.name.toLowerCase().includes(search.toLowerCase()) ||
                   p.barcode.includes(search)
               )
-              .slice(0, 6)
+              .slice(0, 5)
               .map((p) => (
                 <div
                   key={p._id}
-                  style={{
-                    ...styles.dropdownItem,
-                    color:
-                      p.stock > 0
-                        ? "#0f172a"
-                        : "#dc2626",
+                  style={styles.dropdownItem}
+                  onClick={() => {
+                    addItemToBill(p);
+                    setSearch("");
                   }}
-                  onClick={() =>
-                    p.stock > 0
-                      ? (addItem(p), setSearch(""))
-                      : alert("Out of stock")
-                  }
                 >
-                  {p.name} — ₹{p.price} (Stock:
-                  {p.stock})
+                  {p.name} - ₹{p.price}
                 </div>
               ))}
           </div>
         )}
       </div>
 
-      {/* Bill */}
+      {/* Table */}
       <div style={styles.card}>
-        <table style={styles.table}>
+        <table width="100%">
           <thead>
             <tr>
               <th>Item</th>
               <th>₹</th>
               <th>Qty</th>
               <th>Total</th>
-              <th />
+              <th></th>
             </tr>
           </thead>
 
@@ -282,15 +248,12 @@ Payment: ${paymentMethod.toUpperCase()}
                 <td>
                   <input
                     type="number"
-                    min="1"
                     value={i.quantity}
+                    min="1"
                     onChange={(e) =>
-                      updateQty(
-                        i.barcode,
-                        Number(e.target.value)
-                      )
+                      updateQty(i.barcode, Number(e.target.value))
                     }
-                    style={styles.qtyInput}
+                    style={{ width: 50 }}
                   />
                 </td>
 
@@ -299,9 +262,7 @@ Payment: ${paymentMethod.toUpperCase()}
                 <td>
                   <button
                     style={styles.removeBtn}
-                    onClick={() =>
-                      removeItem(i.barcode)
-                    }
+                    onClick={() => removeItem(i.barcode)}
                   >
                     ✖
                   </button>
@@ -311,50 +272,35 @@ Payment: ${paymentMethod.toUpperCase()}
           </tbody>
         </table>
 
-        <div style={styles.totalBoxMain}>
-          <span>Grand Total</span>
-          <span>₹{total}</span>
-        </div>
+        <h3>Total: ₹{total}</h3>
       </div>
 
       {/* Payment */}
       <div style={styles.card}>
-        <h4 style={styles.sectionTitle}>
-          Payment Method
-        </h4>
-
         <label>
           <input
             type="radio"
             value="cash"
             checked={paymentMethod === "cash"}
-            onChange={(e) =>
-              setPaymentMethod(e.target.value)
-            }
+            onChange={(e) => setPaymentMethod(e.target.value)}
           />{" "}
           Cash
         </label>{" "}
-        &nbsp;&nbsp;
+        &nbsp;
 
         <label>
           <input
             type="radio"
             value="upi"
             checked={paymentMethod === "upi"}
-            onChange={(e) =>
-              setPaymentMethod(e.target.value)
-            }
+            onChange={(e) => setPaymentMethod(e.target.value)}
           />{" "}
           UPI
         </label>
       </div>
 
-      {/* Generate */}
-      <button
-        style={styles.generateBtn}
-        onClick={generateBill}
-      >
-        ✅ Generate Bill
+      <button style={styles.generateBtn} onClick={generateBill}>
+        Generate Bill
       </button>
     </div>
   );
@@ -366,34 +312,21 @@ export default Billing;
 
 const styles = {
   page: {
-    padding: 14,
+    padding: 16,
     background: "#f8fafc",
     minHeight: "100vh",
-  },
-
-  heading: {
-    fontSize: "22px",
-    fontWeight: "700",
-    marginBottom: 12,
   },
 
   card: {
     background: "#fff",
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 8,
     marginBottom: 14,
-    boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
-  },
-
-  sectionTitle: {
-    fontSize: "15px",
-    fontWeight: "600",
-    marginBottom: 6,
   },
 
   primaryBtn: {
-    padding: "10px",
     width: "100%",
+    padding: 12,
     background: "#2563eb",
     color: "#fff",
     border: "none",
@@ -403,54 +336,31 @@ const styles = {
 
   reader: {
     width: "100%",
-    maxWidth: 260,
+    maxWidth: 300,
     margin: "10px auto",
   },
 
-  searchInput: {
+  search: {
     width: "100%",
     padding: 10,
-    borderRadius: 6,
-    border: "1px solid #cbd5e1",
   },
 
   dropdown: {
-    border: "1px solid #cbd5e1",
-    borderRadius: 6,
-    marginTop: 6,
+    border: "1px solid #ddd",
+    marginTop: 5,
   },
 
   dropdownItem: {
     padding: 8,
     cursor: "pointer",
-    borderBottom: "1px solid #eee",
-  },
-
-  table: {
-    width: "100%",
-    fontSize: "13px",
-    borderCollapse: "collapse",
-  },
-
-  qtyInput: {
-    width: 55,
-    padding: 4,
   },
 
   removeBtn: {
-    background: "#ef4444",
+    background: "red",
     color: "#fff",
     border: "none",
-    borderRadius: 4,
     padding: "4px 6px",
-  },
-
-  totalBoxMain: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: "700",
+    borderRadius: 4,
   },
 
   generateBtn: {
@@ -459,8 +369,7 @@ const styles = {
     background: "#22c55e",
     color: "#fff",
     border: "none",
-    borderRadius: 10,
-    fontSize: 16,
+    borderRadius: 8,
     fontWeight: "700",
   },
 };
@@ -469,7 +378,7 @@ const styles = {
 
 
 // import { Html5QrcodeScanner } from "html5-qrcode";
-// import { useEffect, useState } from "react";
+// import { useEffect, useRef, useState } from "react";
 // import API from "../api/api";
 
 // const Billing = () => {
@@ -480,7 +389,9 @@ const styles = {
 //   const [search, setSearch] = useState("");
 //   const [paymentMethod, setPaymentMethod] = useState("cash");
 
-//   /* ================= FETCH PRODUCTS ================= */
+//   const scannerRef = useRef(null);
+
+//   /* ================= LOAD PRODUCTS ================= */
 
 //   useEffect(() => {
 //     loadProducts();
@@ -495,10 +406,13 @@ const styles = {
 //     }
 //   };
 
-//   /* ================= BARCODE SCANNER ================= */
+//   /* ================= SCANNER ================= */
 
 //   useEffect(() => {
 //     if (!scannerOn) return;
+
+//     // Prevent multiple scanners
+//     if (scannerRef.current) return;
 
 //     const scanner = new Html5QrcodeScanner(
 //       "reader",
@@ -506,24 +420,40 @@ const styles = {
 //       false
 //     );
 
+//     scannerRef.current = scanner;
+
 //     scanner.render(
 //       async (decodedText) => {
-//         await scanner.clear();
+//         try {
+//           await scanner.clear();
+//         } catch {}
+
+//         scannerRef.current = null;
 //         setScannerOn(false);
+
 //         addProductByBarcode(decodedText);
 //       },
 //       () => {}
 //     );
 
 //     return () => {
-//       scanner.clear().catch(() => {});
+//       if (scannerRef.current) {
+//         scannerRef.current
+//           .clear()
+//           .catch(() => {})
+//           .finally(() => {
+//             scannerRef.current = null;
+//           });
+//       }
 //     };
 //   }, [scannerOn]);
+
+//   /* ================= BARCODE ================= */
 
 //   const addProductByBarcode = async (barcode) => {
 //     try {
 //       const res = await API.get(`/products/barcode/${barcode}`);
-//       addItemToBill(res.data);
+//       addItem(res.data);
 //     } catch {
 //       alert("Product not found");
 //     }
@@ -531,7 +461,7 @@ const styles = {
 
 //   /* ================= ADD ITEM ================= */
 
-//   const addItemToBill = (product) => {
+//   const addItem = (product) => {
 //     if (product.stock <= 0) {
 //       alert(`${product.name} is out of stock`);
 //       return;
@@ -589,7 +519,7 @@ const styles = {
 //     );
 //   };
 
-//   /* ================= REMOVE ITEM ================= */
+//   /* ================= REMOVE ================= */
 
 //   const removeItem = (barcode) => {
 //     setItems((prev) =>
@@ -597,14 +527,14 @@ const styles = {
 //     );
 //   };
 
-//   /* ================= CALCULATIONS ================= */
+//   /* ================= TOTAL ================= */
 
 //   const total = items.reduce(
 //     (sum, i) => sum + i.price * i.quantity,
 //     0
 //   );
 
-//   /* ================= GENERATE BILL ================= */
+//   /* ================= GENERATE ================= */
 
 //   const generateBill = async () => {
 //     if (items.length === 0) {
@@ -629,13 +559,13 @@ const styles = {
 //         paymentMethod,
 //       });
 
-//       alert("✅ Bill Generated Successfully");
+//       alert("✅ Bill Generated");
 
 //       setItems([]);
 //       setPaymentMethod("cash");
 //       setSearch("");
 
-//       loadProducts(); // refresh stock
+//       loadProducts();
 //     } catch (err) {
 //       alert(err.response?.data?.message || "Billing failed");
 //     }
@@ -651,7 +581,9 @@ const styles = {
 //       <div style={styles.card}>
 //         <button
 //           style={styles.primaryBtn}
-//           onClick={() => setScannerOn(true)}
+//           onClick={() => {
+//             if (!scannerOn) setScannerOn(true);
+//           }}
 //         >
 //           📷 Scan Barcode
 //         </button>
@@ -695,8 +627,7 @@ const styles = {
 //                   }}
 //                   onClick={() =>
 //                     p.stock > 0
-//                       ? (addItemToBill(p),
-//                         setSearch(""))
+//                       ? (addItem(p), setSearch(""))
 //                       : alert("Out of stock")
 //                   }
 //                 >
@@ -708,7 +639,7 @@ const styles = {
 //         )}
 //       </div>
 
-//       {/* Bill Table */}
+//       {/* Bill */}
 //       <div style={styles.card}>
 //         <table style={styles.table}>
 //           <thead>
@@ -759,7 +690,6 @@ const styles = {
 //           </tbody>
 //         </table>
 
-//         {/* Total */}
 //         <div style={styles.totalBoxMain}>
 //           <span>Grand Total</span>
 //           <span>₹{total}</span>
@@ -794,7 +724,7 @@ const styles = {
 //               setPaymentMethod(e.target.value)
 //             }
 //           />{" "}
-//           UPI / Online
+//           UPI
 //         </label>
 //       </div>
 

@@ -1,29 +1,27 @@
 import { useState, useEffect } from "react";
 import API from "../api/api";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
-
-  // ✅ Screen size
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Detect resize
+  /* Remember Me */
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 600);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const saved = localStorage.getItem("rememberUser");
+    if (saved) {
+      const data = JSON.parse(saved);
+      setEmail(data.email);
+      setPassword(data.password);
+      setRemember(true);
+    }
   }, []);
 
   const handleSubmit = async (e) => {
@@ -31,8 +29,21 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await API.post("/auth/login", { email, password });
+      const res = await API.post("/auth/login", {
+        email,
+        password,
+      });
+
       login(res.data);
+
+      if (remember) {
+        localStorage.setItem(
+          "rememberUser",
+          JSON.stringify({ email, password })
+        );
+      } else {
+        localStorage.removeItem("rememberUser");
+      }
 
       if (res.data.role === "admin") navigate("/admin");
       else navigate("/cashier");
@@ -42,94 +53,102 @@ const Login = () => {
   };
 
   return (
-    <div style={darkMode ? styles.pageDark : styles.page}>
+    <div style={styles.page}>
       {/* ================= HEADER ================= */}
-      <header
-        style={{
-          ...styles.appHeader,
-          flexDirection: isMobile ? "column" : "row",
-          gap: isMobile ? 8 : 0,
-        }}
-      >
-        <h2 style={styles.appTitle}>🏪 Supermarket ERP</h2>
-
-        <button
-          style={styles.modeBtn}
-          onClick={() => setDarkMode(!darkMode)}
-        >
-          {darkMode ? "☀️ Light" : "🌙 Dark"}
-        </button>
+      <header style={styles.header}>
+        <div style={styles.headerContainer}>
+          <h2 style={styles.logo}>
+            🏪 Supermarket ERP
+          </h2>
+        </div>
       </header>
 
-      {/* ================= LOGIN CARD ================= */}
-      <div
-        style={{
-          ...(darkMode ? styles.cardDark : styles.card),
-          width: isMobile ? "90%" : "420px",
-          padding: isMobile ? "22px" : "32px",
-        }}
-      >
-        <h3 style={darkMode ? styles.titleDark : styles.title}>
-          Login to your account
-        </h3>
+      {/* ================= MAIN ================= */}
+      <main style={styles.main}>
+        <div style={styles.card}>
+          <h3 style={styles.title}>
+            Welcome Back 👋
+          </h3>
 
-        {error && <div style={styles.errorBox}>{error}</div>}
+          {error && (
+            <div style={styles.error}>{error}</div>
+          )}
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>Email</label>
-          <input
-            style={darkMode ? styles.inputDark : styles.input}
-            type="email"
-            placeholder="Enter email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <form onSubmit={handleSubmit}>
+            <div style={styles.inputGroup}>
+              <label>Email</label>
+              <input
+                type="email"
+                placeholder="Enter email"
+                value={email}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
+                required
+              />
+            </div>
 
-          <label style={styles.label}>Password</label>
+            <div style={styles.inputGroup}>
+              <label>Password</label>
 
-          <div style={styles.passwordWrapper}>
-            <input
-              style={darkMode ? styles.inputDark : styles.input}
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+              <div style={styles.passwordBox}>
+                <input
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
+                  required
+                />
 
-            <span
-              style={styles.eye}
-              onClick={() => setShowPassword(!showPassword)}
+                <span
+                  style={styles.eye}
+                  onClick={() =>
+                    setShowPassword(!showPassword)
+                  }
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </span>
+              </div>
+            </div>
+
+            <div style={styles.row}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={() =>
+                    setRemember(!remember)
+                  }
+                />{" "}
+                Remember Me
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              style={styles.loginBtn}
             >
-              {showPassword ? "Hide" : "Show"}
-            </span>
-          </div>
-
-          <button
-            style={{
-              ...styles.button,
-              padding: isMobile ? "14px" : "12px",
-              fontSize: isMobile ? "16px" : "15px",
-            }}
-            type="submit"
-          >
-            Login
-          </button>
-        </form>
-
-        {/* Register */}
-        <p style={styles.registerText}>
-          Don’t have an account?{" "}
-          <Link to="/register" style={styles.link}>
-            Register
-          </Link>
-        </p>
-      </div>
+              🔐 Login
+            </button>
+          </form>
+        </div>
+      </main>
 
       {/* ================= FOOTER ================= */}
-      <footer style={styles.appFooter}>
-        © {new Date().getFullYear()} Supermarket ERP
+      <footer style={styles.footer}>
+        <div style={styles.footerContainer}>
+          © {new Date().getFullYear()} Dilraj
+          Kirana Store
+          <br />
+          Built with ❤️ by Prabhakar
+          Technologies
+        </div>
       </footer>
     </div>
   );
@@ -144,152 +163,109 @@ const styles = {
     minHeight: "100vh",
     display: "flex",
     flexDirection: "column",
-    justifyContent: "space-between",
-    background: "#f1f5f9",
+    background:
+      "linear-gradient(135deg, #2563eb, #0f172a)",
   },
 
-  pageDark: {
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    background: "#020617",
-  },
-
-  appHeader: {
+  /* HEADER */
+  header: {
+    background: "#0f172a",
     padding: "14px 20px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    background: "#1e293b",
+  },
+
+  headerContainer: {
+    maxWidth: 1200,
+    margin: "0 auto",
+  },
+
+  logo: {
     color: "#fff",
-  },
-
-  appTitle: {
+    fontSize: 20,
+    fontWeight: 700,
     margin: 0,
-    fontSize: "20px",
-    fontWeight: "700",
   },
 
-  appFooter: {
-    textAlign: "center",
-    padding: "12px",
-    fontSize: "12px",
-    color: "#64748b",
-    background: "#f8fafc",
+  /* MAIN */
+  main: {
+    flex: 1,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
   },
 
+  /* CARD */
   card: {
-    margin: "auto",
+    width: "100%",
+    maxWidth: 380,
     background: "#ffffff",
-    borderRadius: "12px",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-  },
-
-  cardDark: {
-    margin: "auto",
-    background: "#020617",
-    borderRadius: "12px",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+    padding: 30,
+    borderRadius: 16,
+    boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
   },
 
   title: {
-    fontSize: "20px",
-    fontWeight: "700",
-    color: "#0f172a",
-    marginBottom: "20px",
     textAlign: "center",
+    marginBottom: 20,
+    fontSize: 22,
   },
 
-  titleDark: {
-    fontSize: "20px",
-    fontWeight: "700",
-    color: "#e5e7eb",
-    marginBottom: "20px",
-    textAlign: "center",
-  },
-
-  label: {
-    fontSize: "13px",
-    marginBottom: "6px",
-    color: "#64748b",
-  },
-
-  errorBox: {
-    background: "#fee2e2",
-    color: "#b91c1c",
-    padding: "10px",
-    borderRadius: "6px",
-    fontSize: "14px",
-    marginBottom: "12px",
-  },
-
-  form: {
+  inputGroup: {
     display: "flex",
     flexDirection: "column",
+    marginBottom: 16,
   },
 
-  input: {
-    padding: "12px",
-    borderRadius: "6px",
-    border: "1px solid #cbd5f5",
-    fontSize: "15px",
-    marginBottom: "14px",
-    width: "100%",
-  },
-
-  inputDark: {
-    padding: "12px",
-    borderRadius: "6px",
-    border: "1px solid #334155",
-    background: "#020617",
-    color: "#e5e7eb",
-    fontSize: "15px",
-    marginBottom: "14px",
-    width: "100%",
-  },
-
-  passwordWrapper: {
+  passwordBox: {
     position: "relative",
   },
 
   eye: {
     position: "absolute",
-    right: "10px",
-    top: "12px",
-    fontSize: "13px",
-    color: "#6366f1",
+    right: 10,
+    top: 10,
     cursor: "pointer",
   },
 
-  button: {
-    marginTop: "10px",
-    borderRadius: "6px",
+  row: {
+    marginBottom: 16,
+    fontSize: 13,
+  },
+
+  loginBtn: {
+    width: "100%",
+    padding: 14,
+    borderRadius: 8,
     border: "none",
-    background: "#4f46e5",
+    background:
+      "linear-gradient(to right, #4f46e5, #2563eb)",
     color: "#fff",
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: 600,
     cursor: "pointer",
   },
 
-  registerText: {
-    marginTop: "16px",
+  error: {
+    background: "#fee2e2",
+    color: "#b91c1c",
+    padding: 8,
+    borderRadius: 6,
+    marginBottom: 12,
     textAlign: "center",
-    fontSize: "13px",
-    color: "#64748b",
+    fontSize: 13,
   },
 
-  link: {
-    color: "#4f46e5",
-    fontWeight: "600",
-    textDecoration: "none",
+  /* FOOTER */
+  footer: {
+    background: "#0f172a",
+    color: "#94a3b8",
+    textAlign: "center",
+    padding: 14,
+    fontSize: 12,
   },
 
-  modeBtn: {
-    border: "none",
-    background: "transparent",
-    fontSize: "14px",
-    color: "#fff",
-    cursor: "pointer",
+  footerContainer: {
+    maxWidth: 1200,
+    margin: "0 auto",
   },
 };

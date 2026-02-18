@@ -1,6 +1,6 @@
 import { useState } from "react";
 import API from "../api/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -28,10 +28,14 @@ const Register = () => {
 
     try {
       await API.post("/auth/register", form);
-      setSuccess("User registered successfully");
-      setTimeout(() => navigate("/login"), 1500);
+
+      setSuccess("✅ User registered successfully");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch {
-      setError("Registration failed. Please try again.");
+      setError("❌ Registration failed. Try again.");
     }
   };
 
@@ -43,9 +47,9 @@ const Register = () => {
         <div style={styles.header}>
           <div>
             <h2 style={darkMode ? styles.titleDark : styles.title}>
-              Supermarket ERP
+              🏪 Supermarket ERP
             </h2>
-            <p style={styles.subtitle}>Create User Account</p>
+            <p style={styles.subtitle}>Create New Account</p>
           </div>
 
           <button
@@ -60,12 +64,15 @@ const Register = () => {
         {error && <div style={styles.errorBox}>{error}</div>}
         {success && <div style={styles.successBox}>{success}</div>}
 
+        {/* Form */}
         <form onSubmit={handleSubmit} style={styles.form}>
+
           <label style={styles.label}>Full Name</label>
           <input
             style={darkMode ? styles.inputDark : styles.input}
             name="name"
             placeholder="Enter full name"
+            value={form.name}
             onChange={handleChange}
             required
           />
@@ -75,21 +82,25 @@ const Register = () => {
             style={darkMode ? styles.inputDark : styles.input}
             type="email"
             name="email"
-            placeholder="Enter email address"
+            placeholder="Enter email"
+            value={form.email}
             onChange={handleChange}
             required
           />
 
           <label style={styles.label}>Password</label>
+
           <div style={styles.passwordWrapper}>
             <input
               style={darkMode ? styles.inputDark : styles.input}
               type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Enter password"
+              value={form.password}
               onChange={handleChange}
               required
             />
+
             <span
               style={styles.eye}
               onClick={() => setShowPassword(!showPassword)}
@@ -99,6 +110,7 @@ const Register = () => {
           </div>
 
           <label style={styles.label}>Role</label>
+
           <select
             style={darkMode ? styles.selectDark : styles.select}
             name="role"
@@ -110,13 +122,19 @@ const Register = () => {
           </select>
 
           <button style={styles.button} type="submit">
-            Create User
+            ➕ Create User
           </button>
+
         </form>
 
+        {/* Footer */}
         <p style={styles.footer}>
-          Already registered? <a href="/login" style={styles.link}>Login</a>
+          Already registered?{" "}
+          <Link to="/login" style={styles.link}>
+            Login
+          </Link>
         </p>
+
       </div>
     </div>
   );
@@ -124,10 +142,15 @@ const Register = () => {
 
 export default Register;
 
+/* ================= STYLES ================= */
 
 const styles = {
+
+  /* Page */
+
   page: {
     minHeight: "100vh",
+    padding: "16px",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -136,42 +159,40 @@ const styles = {
 
   pageDark: {
     minHeight: "100vh",
+    padding: "16px",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     background: "#020617",
   },
 
+  /* Card */
+
   card: {
     width: "100%",
-    maxWidth: "440px",
+    maxWidth: "420px",
     background: "#ffffff",
-    padding: "32px",
-    borderRadius: "12px",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+    padding: "26px",
+    borderRadius: "14px",
+    boxShadow: "0 12px 28px rgba(0,0,0,0.15)",
   },
 
   cardDark: {
     width: "100%",
-    maxWidth: "440px",
+    maxWidth: "420px",
     background: "#020617",
-    padding: "32px",
-    borderRadius: "12px",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+    padding: "26px",
+    borderRadius: "14px",
+    boxShadow: "0 12px 28px rgba(0,0,0,0.5)",
   },
+
+  /* Header */
 
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "22px",
-  },
-
-  modeBtn: {
-    border: "none",
-    background: "transparent",
-    fontSize: "18px",
-    cursor: "pointer",
+    marginBottom: "18px",
   },
 
   title: {
@@ -191,71 +212,60 @@ const styles = {
     color: "#64748b",
   },
 
-  label: {
-    fontSize: "13px",
-    marginBottom: "6px",
-    color: "#64748b",
-    textAlign: "left",
+  modeBtn: {
+    border: "none",
+    background: "transparent",
+    fontSize: "18px",
+    cursor: "pointer",
   },
 
-  errorBox: {
-    background: "#fee2e2",
-    color: "#b91c1c",
-    padding: "10px",
-    borderRadius: "6px",
-    fontSize: "14px",
-    marginBottom: "12px",
-  },
-
-  successBox: {
-    background: "#dcfce7",
-    color: "#166534",
-    padding: "10px",
-    borderRadius: "6px",
-    fontSize: "14px",
-    marginBottom: "12px",
-  },
+  /* Form */
 
   form: {
     display: "flex",
     flexDirection: "column",
   },
 
+  label: {
+    fontSize: "13px",
+    marginBottom: "5px",
+    color: "#64748b",
+  },
+
   input: {
-    padding: "11px",
-    borderRadius: "6px",
-    border: "1px solid #cbd5f5",
+    padding: "12px",
+    borderRadius: "7px",
+    border: "1px solid #cbd5e1",
     fontSize: "14px",
     marginBottom: "14px",
   },
 
   inputDark: {
-    padding: "11px",
-    borderRadius: "6px",
+    padding: "12px",
+    borderRadius: "7px",
     border: "1px solid #334155",
     background: "#020617",
-    color: "#e5e7eb",
+    color: "#fff",
     fontSize: "14px",
     marginBottom: "14px",
   },
 
   select: {
-    padding: "11px",
-    borderRadius: "6px",
-    border: "1px solid #cbd5f5",
+    padding: "12px",
+    borderRadius: "7px",
+    border: "1px solid #cbd5e1",
     fontSize: "14px",
     marginBottom: "18px",
-    background: "#fff",
   },
 
   selectDark: {
-    padding: "11px",
-    borderRadius: "6px",
+    padding: "12px",
+    borderRadius: "7px",
     border: "1px solid #334155",
+    background: "#020617",
+    color: "#fff",
     fontSize: "14px",
     marginBottom: "18px",
-    background: "#020617",
-    color: "#e5e7eb",
   },
 
   passwordWrapper: {
@@ -264,17 +274,18 @@ const styles = {
 
   eye: {
     position: "absolute",
-    right: "10px",
-    top: "11px",
+    right: "12px",
+    top: "12px",
     fontSize: "12px",
     color: "#6366f1",
     cursor: "pointer",
   },
 
+  /* Button */
+
   button: {
-    marginTop: "6px",
-    padding: "12px",
-    borderRadius: "6px",
+    padding: "13px",
+    borderRadius: "8px",
     border: "none",
     background: "#4f46e5",
     color: "#fff",
@@ -283,8 +294,30 @@ const styles = {
     cursor: "pointer",
   },
 
+  /* Messages */
+
+  errorBox: {
+    background: "#fee2e2",
+    color: "#991b1b",
+    padding: "10px",
+    borderRadius: "6px",
+    fontSize: "13px",
+    marginBottom: "12px",
+  },
+
+  successBox: {
+    background: "#dcfce7",
+    color: "#166534",
+    padding: "10px",
+    borderRadius: "6px",
+    fontSize: "13px",
+    marginBottom: "12px",
+  },
+
+  /* Footer */
+
   footer: {
-    marginTop: "20px",
+    marginTop: "18px",
     textAlign: "center",
     fontSize: "13px",
     color: "#64748b",

@@ -3,6 +3,7 @@ import API from "../api/api";
 
 const MyBillsHistory = () => {
   const [bills, setBills] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadMyBills();
@@ -12,24 +13,41 @@ const MyBillsHistory = () => {
     try {
       const res = await API.get("/sales/my");
       setBills(res.data);
-    } catch (err) {
+    } catch {
       alert("Failed to load bills");
     }
   };
 
-  // View Bill
+  /* ================= SEARCH FILTER ================= */
+
+  const filteredBills = bills.filter((b) => {
+    const text = search.toLowerCase();
+
+    return (
+      b.billNumber.toLowerCase().includes(text) ||
+      b.paymentMethod.toLowerCase().includes(text) ||
+      String(b.totalAmount).includes(text) ||
+      new Date(b.createdAt)
+        .toLocaleDateString()
+        .includes(text)
+    );
+  });
+
+  /* ================= VIEW ================= */
+
   const viewBill = (bill) => {
     let itemsText = bill.items
       .map(
         (i) =>
-          `${i.name}  x${i.quantity}  = ₹${i.total}`
+          `${i.name} x${i.quantity} = ₹${i.total}`
       )
       .join("\n");
 
     alert(`
-Bill No: ${bill.billNumber}
+🧾 BILL
 
-Items:
+Bill: ${bill.billNumber}
+
 ${itemsText}
 
 Total: ₹${bill.totalAmount}
@@ -38,46 +56,39 @@ Date: ${new Date(bill.createdAt).toLocaleString()}
     `);
   };
 
-  // WhatsApp
-  const sendWhatsApp = (bill) => {
-    const msg = `
-🧾 BILL: ${bill.billNumber}
-Total: ₹${bill.totalAmount}
-Payment: ${bill.paymentMethod}
-Date: ${new Date(bill.createdAt).toLocaleDateString()}
-    `;
-
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(msg)}`,
-      "_blank"
-    );
-  };
-
   return (
     <div style={styles.card}>
-      <h3 style={styles.title}>📜 My Bills History</h3>
+      <h3 style={styles.title}>📜 My Bills</h3>
+
+      {/* 🔍 SEARCH */}
+      <input
+        placeholder="Search bill..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={styles.search}
+      />
 
       <div style={{ overflowX: "auto" }}>
         <table style={styles.table}>
           <thead>
             <tr>
-              <th>Bill No</th>
+              <th>Bill</th>
               <th>Total</th>
-              <th>Payment</th>
+              <th>Pay</th>
               <th>Date</th>
-              <th>Actions</th>
+              <th>Action</th>
             </tr>
           </thead>
 
           <tbody>
-            {bills.length === 0 ? (
+            {filteredBills.length === 0 ? (
               <tr>
                 <td colSpan="5" style={styles.empty}>
                   No bills found
                 </td>
               </tr>
             ) : (
-              bills.map((b) => (
+              filteredBills.map((b) => (
                 <tr key={b._id}>
                   <td>{b.billNumber}</td>
                   <td>₹{b.totalAmount}</td>
@@ -92,13 +103,6 @@ Date: ${new Date(bill.createdAt).toLocaleDateString()}
                       onClick={() => viewBill(b)}
                     >
                       View
-                    </button>
-
-                    <button
-                      style={styles.whatsappBtn}
-                      onClick={() => sendWhatsApp(b)}
-                    >
-                      WhatsApp
                     </button>
                   </td>
                 </tr>
@@ -120,11 +124,18 @@ const styles = {
     background: "#fff",
     padding: 16,
     borderRadius: 10,
-    boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
   },
 
   title: {
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+
+  search: {
+    width: "100%",
+    padding: 8,
+    borderRadius: 6,
+    border: "1px solid #cbd5e1",
+    marginBottom: 10,
   },
 
   table: {
@@ -141,16 +152,6 @@ const styles = {
 
   viewBtn: {
     background: "#2563eb",
-    color: "#fff",
-    border: "none",
-    padding: "5px 8px",
-    borderRadius: 5,
-    marginRight: 5,
-    cursor: "pointer",
-  },
-
-  whatsappBtn: {
-    background: "#22c55e",
     color: "#fff",
     border: "none",
     padding: "5px 8px",

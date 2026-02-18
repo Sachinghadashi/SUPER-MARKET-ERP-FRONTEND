@@ -9,36 +9,35 @@ const CashierDashboard = () => {
 
   return (
     <div style={styles.page}>
-      {/* Header */}
+      {/* ================= HEADER ================= */}
       <div style={styles.header}>
         <div>
-          <h1 style={styles.title}>Cashier Dashboard</h1>
+          <h1 style={styles.title}>💳 Cashier Dashboard</h1>
 
           <p style={styles.subtitle}>
-            Logged in as <b>{user?.name}</b>
+            Welcome, <b>{user?.name}</b>
           </p>
         </div>
 
-        <button
+        {/* <button
           style={styles.logoutBtn}
           onClick={logout}
         >
-          Logout
-        </button>
+          ⏻ Logout
+        </button> */}
       </div>
 
-      {/* Billing */}
+      {/* ================= BILLING ================= */}
       <div style={styles.card}>
         <Billing />
       </div>
 
-      {/* Today Bills */}
+      {/* ================= TODAY BILLS ================= */}
       <div style={styles.card}>
-        <h3>📅 Today’s Bills</h3>
         <TodayBills />
       </div>
 
-      {/* My Bills History */}
+      {/* ================= HISTORY ================= */}
       <div style={styles.card}>
         <MyBillsHistory />
       </div>
@@ -53,21 +52,25 @@ export default CashierDashboard;
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: 20,
+    padding: 16,
     background: "#f1f5f9",
   },
+
+  /* HEADER */
 
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     flexWrap: "wrap",
+    gap: 12,
     marginBottom: 20,
   },
 
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "700",
+    color: "#0f172a",
   },
 
   subtitle: {
@@ -81,14 +84,25 @@ const styles = {
     border: "none",
     padding: "8px 14px",
     borderRadius: 6,
+    fontSize: 13,
+    fontWeight: "600",
     cursor: "pointer",
   },
 
+  /* CARDS */
+
   card: {
     background: "#fff",
-    padding: 18,
+    padding: 16,
     borderRadius: 12,
-    marginBottom: 20,
-    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+    marginBottom: 18,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+  },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 10,
+    color: "#1e293b",
   },
 };

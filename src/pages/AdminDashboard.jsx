@@ -4,7 +4,6 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import DailySalesChart from "../components/DailySalesChart";
 
-
 const POWER_BI_URL =
   "https://app.powerbi.com/view?r=YOUR_POWER_BI_LINK";
 
@@ -57,296 +56,289 @@ const AdminDashboard = () => {
     }
   };
 
-  /* ================= POWER BI ================= */
-
-  const openPowerBI = () => {
-    window.open(POWER_BI_URL, "_blank");
-  };
-
-  /* ================= FILTERS ================= */
-
-  const filteredDateWise = dateFilter
-    ? dateWise.filter((d) => d._id === dateFilter)
-    : dateWise;
-
-  const filteredMonthWise = monthFilter
-    ? monthWise.filter(
-        (m) =>
-          `${m._id.year}-${String(m._id.month).padStart(
-            2,
-            "0"
-          )}` === monthFilter
-      )
-    : monthWise;
-
-  const filteredYearWise = yearFilter
-    ? yearWise.filter(
-        (y) => String(y._id.year) === yearFilter
-      )
-    : yearWise;
-
   /* ================= UI ================= */
 
   return (
-    <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>
-            Admin Dashboard
-          </h1>
+    <div className="container-fluid bg-light min-vh-100 p-3">
 
-          <p style={styles.subtitle}>
-            Logged in as <b>{user?.name}</b>
-          </p>
-        </div>
+      {/* ================= HEADER ================= */}
 
-        <div style={styles.btnGroup}>
-          <button
-            onClick={() => navigate("/products")}
-            style={styles.primaryBtn}
-          >
-            📦 Products Management
-          </button>
+      <div className="card shadow-sm border-0 rounded-4 mb-4">
 
-          <button
-            onClick={() => navigate("/bills")}
-            style={styles.billsBtn}
-          >
-            🧾 View All Bills
-          </button>
+        <div className="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center">
 
-          {/* TODAY BILLS */}
-          {/* <button
-            onClick={() =>
-              navigate("/bills", {
-                state: { today: true },
-              })
-            }
-            style={styles.todayBtn}
-          >
-            📅 Today Bills
-          </button> */}
+          <div>
+            <h3 className="fw-bold text-primary mb-1">
+              📊 Admin Dashboard
+            </h3>
 
-          {/* <button
-            onClick={openPowerBI}
-            style={styles.powerBiBtn}
-          >
-            📊 Power BI
-          </button> */}
+            <p className="text-muted mb-0">
+              Logged in as <b>{user?.name}</b>
+            </p>
+          </div>
 
-          {/* <button
-            style={styles.logoutBtn}
-            onClick={logout}
-          >
-            Logout
-          </button> */}
+          <div className="d-flex flex-wrap gap-2 mt-3 mt-md-0">
+
+            <button
+              onClick={() => navigate("/products")}
+              className="btn btn-primary"
+            >
+              📦 Products Management
+            </button>
+
+            <button
+              onClick={() => navigate("/bills")}
+              className="btn btn-success"
+            >
+              🧾 View All Bills
+            </button>
+
+            {/* <button
+              onClick={logout}
+              className="btn btn-outline-danger"
+            >
+              ⏻ Logout
+            </button> */}
+
+          </div>
+
         </div>
       </div>
 
-      {/* LOADING */}
-      {loading && <p>Loading reports...</p>}
+      {/* ================= LOADING ================= */}
+
+      {loading && (
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary"></div>
+          <p className="mt-2">Loading reports...</p>
+        </div>
+      )}
 
       {!loading && (
         <>
-          {/* Summary */}
-          <div style={styles.summaryGrid}>
-            {/* ================= DAILY CHART ================= */}
-              <DailySalesChart data={dateWise} />
-            <div style={styles.summaryCard}>
-              <p>Total Revenue</p>
-              <h2>₹{summary.totalRevenue}</h2>
+
+          {/* ================= SUMMARY ================= */}
+
+          <div className="row g-3 mb-4">
+
+            {/* Chart */}
+            <div className="col-12 col-lg-6">
+              <div className="card shadow-sm border-0 rounded-4 h-100">
+
+                <div className="card-header bg-primary text-white fw-bold rounded-top-4">
+                  📈 Daily Sales Chart
+                </div>
+
+                <div className="card-body">
+                  <DailySalesChart data={dateWise} />
+                </div>
+
+              </div>
             </div>
 
-            <div style={styles.summaryCard}>
-              <p>Total Bills</p>
-              <h2>{summary.totalBills}</h2>
+            {/* Revenue */}
+            <div className="col-12 col-md-6 col-lg-3">
+              <div className="card shadow-sm border-0 rounded-4 text-center h-100">
+
+                <div className="card-body">
+                  <h6 className="text-muted">
+                    Total Revenue
+                  </h6>
+
+                  <h3 className="fw-bold text-success">
+                    ₹{summary.totalRevenue}
+                  </h3>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Bills */}
+            <div className="col-12 col-md-6 col-lg-3">
+              <div className="card shadow-sm border-0 rounded-4 text-center h-100">
+
+                <div className="card-body">
+                  <h6 className="text-muted">
+                    Total Bills
+                  </h6>
+
+                  <h3 className="fw-bold text-primary">
+                    {summary.totalBills}
+                  </h3>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          {/* ================= DATE WISE ================= */}
+
+          <div className="card shadow-sm border-0 rounded-4 mb-4">
+
+            <div className="card-body">
+
+              <h5 className="fw-bold mb-3">
+                📅 Date-wise Sales
+              </h5>
+
+              <input
+                type="date"
+                className="form-control mb-3"
+                value={dateFilter}
+                onChange={(e) =>
+                  setDateFilter(e.target.value)
+                }
+              />
+
+              <div className="table-responsive">
+
+                <table className="table table-bordered text-center">
+
+                  <thead className="table-dark">
+                    <tr>
+                      <th>Date</th>
+                      <th>Revenue (₹)</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {(dateFilter
+                      ? dateWise.filter(
+                          (d) => d._id === dateFilter
+                        )
+                      : dateWise
+                    ).map((d) => (
+                      <tr key={d._id}>
+                        <td>{d._id}</td>
+                        <td>₹{d.totalRevenue}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+
+                </table>
+
+              </div>
+
             </div>
           </div>
 
+          {/* ================= MONTH WISE ================= */}
 
-          {/* Date Wise */}
-          <div style={styles.card}>
-            <h3>Date-wise Sales</h3>
+          <div className="card shadow-sm border-0 rounded-4 mb-4">
 
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) =>
-                setDateFilter(e.target.value)
-              }
-              style={styles.filterInput}
-            />
+            <div className="card-body">
 
-            <table style={styles.table}>
-              <tbody>
-                {filteredDateWise.map((d) => (
-                  <tr key={d._id}>
-                    <td>{d._id}</td>
-                    <td>₹{d.totalRevenue}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              <h5 className="fw-bold mb-3">
+                📆 Month-wise Sales
+              </h5>
+
+              <input
+                type="month"
+                className="form-control mb-3"
+                value={monthFilter}
+                onChange={(e) =>
+                  setMonthFilter(e.target.value)
+                }
+              />
+
+              <div className="table-responsive">
+
+                <table className="table table-bordered text-center">
+
+                  <thead className="table-dark">
+                    <tr>
+                      <th>Month</th>
+                      <th>Revenue (₹)</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {(monthFilter
+                      ? monthWise.filter(
+                          (m) =>
+                            `${m._id.year}-${String(
+                              m._id.month
+                            ).padStart(2, "0")}` ===
+                            monthFilter
+                        )
+                      : monthWise
+                    ).map((m, i) => (
+                      <tr key={i}>
+                        <td>
+                          {m._id.month}/{m._id.year}
+                        </td>
+                        <td>₹{m.totalRevenue}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </div>
           </div>
 
-          {/* Month Wise */}
-          <div style={styles.card}>
-            <h3>Month-wise Sales</h3>
+          {/* ================= YEAR WISE ================= */}
 
-            <input
-              type="month"
-              value={monthFilter}
-              onChange={(e) =>
-                setMonthFilter(e.target.value)
-              }
-              style={styles.filterInput}
-            />
+          <div className="card shadow-sm border-0 rounded-4 mb-4">
 
-            <table style={styles.table}>
-              <tbody>
-                {filteredMonthWise.map((m, i) => (
-                  <tr key={i}>
-                    <td>
-                      {m._id.month}/{m._id.year}
-                    </td>
-                    <td>₹{m.totalRevenue}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="card-body">
+
+              <h5 className="fw-bold mb-3">
+                📊 Year-wise Sales
+              </h5>
+
+              <input
+                type="number"
+                placeholder="Enter Year"
+                className="form-control mb-3"
+                value={yearFilter}
+                onChange={(e) =>
+                  setYearFilter(e.target.value)
+                }
+              />
+
+              <div className="table-responsive">
+
+                <table className="table table-bordered text-center">
+
+                  <thead className="table-dark">
+                    <tr>
+                      <th>Year</th>
+                      <th>Revenue (₹)</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {(yearFilter
+                      ? yearWise.filter(
+                          (y) =>
+                            String(y._id.year) ===
+                            yearFilter
+                        )
+                      : yearWise
+                    ).map((y) => (
+                      <tr key={y._id.year}>
+                        <td>{y._id.year}</td>
+                        <td>₹{y.totalRevenue}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </div>
           </div>
 
-          {/* Year Wise */}
-          <div style={styles.card}>
-            <h3>Year-wise Sales</h3>
-
-            <input
-              type="number"
-              placeholder="Year"
-              value={yearFilter}
-              onChange={(e) =>
-                setYearFilter(e.target.value)
-              }
-              style={styles.filterInput}
-            />
-
-            <table style={styles.table}>
-              <tbody>
-                {filteredYearWise.map((y) => (
-                  <tr key={y._id.year}>
-                    <td>{y._id.year}</td>
-                    <td>₹{y.totalRevenue}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </>
       )}
+
     </div>
   );
 };
 
 export default AdminDashboard;
-
-/* ================= STYLES ================= */
-
-const styles = {
-  page: {
-    padding: 20,
-    background: "#f1f5f9",
-    minHeight: "100vh",
-  },
-
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    marginBottom: 20,
-  },
-
-  btnGroup: {
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-
-  title: {
-    fontSize: 26,
-  },
-
-  subtitle: {
-    fontSize: 13,
-    color: "#64748b",
-  },
-
-  primaryBtn: {
-    background: "#2563eb",
-    color: "#fff",
-    padding: "8px 14px",
-    border: "none",
-    borderRadius: 6,
-  },
-
-  billsBtn: {
-    background: "#059669",
-    color: "#fff",
-    padding: "8px 14px",
-    border: "none",
-    borderRadius: 6,
-  },
-
-  todayBtn: {
-    background: "#0ea5e9",
-    color: "#fff",
-    padding: "8px 14px",
-    border: "none",
-    borderRadius: 6,
-  },
-
-  powerBiBtn: {
-    background: "#f59e0b",
-    color: "#fff",
-    padding: "8px 14px",
-    border: "none",
-    borderRadius: 6,
-  },
-
-  logoutBtn: {
-    background: "#dc2626",
-    color: "#fff",
-    padding: "8px 14px",
-    border: "none",
-    borderRadius: 6,
-  },
-
-  summaryGrid: {
-    display: "flex",
-    gap: 20,
-    marginBottom: 20,
-  },
-
-  summaryCard: {
-    background: "#fff",
-    padding: 16,
-    borderRadius: 8,
-    flex: 1,
-  },
-
-  card: {
-    background: "#fff",
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-
-  filterInput: {
-    padding: 8,
-    marginBottom: 10,
-  },
-
-  table: {
-    width: "100%",
-  },
-};

@@ -7,7 +7,6 @@ const Billing = () => {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
-
   const [scannerOn, setScannerOn] = useState(false);
 
   const scannerRef = useRef(null);
@@ -42,17 +41,12 @@ const Billing = () => {
 
     try {
       await html5QrCode.current.start(
-        { facingMode: "environment" }, // Back camera
-        {
-          fps: 10,
-          qrbox: 250,
-        },
-        (decodedText) => {
-          handleScan(decodedText);
-        },
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => handleScan(decodedText),
         () => {}
       );
-    } catch (err) {
+    } catch {
       alert("Camera not available");
       setScannerOn(false);
     }
@@ -89,7 +83,7 @@ const Billing = () => {
 
     if (exist) {
       if (exist.quantity + 1 > product.stock) {
-        alert("Stock limit");
+        alert("Stock limit reached");
         return;
       }
 
@@ -121,7 +115,7 @@ const Billing = () => {
   const changeQty = (barcode, qty) => {
     const item = items.find((i) => i.barcode === barcode);
 
-    if (qty < 1 || qty > item.stock) {
+    if (!item || qty < 1 || qty > item.stock) {
       alert("Invalid quantity");
       return;
     }
@@ -150,7 +144,7 @@ const Billing = () => {
 
   const generateBill = async () => {
     if (!items.length) {
-      alert("No items");
+      alert("No items in bill");
       return;
     }
 
@@ -162,7 +156,7 @@ const Billing = () => {
       paymentMethod,
     });
 
-    alert("Bill Generated");
+    alert("✅ Bill Generated Successfully");
 
     setItems([]);
     loadProducts();
@@ -171,224 +165,197 @@ const Billing = () => {
   /* ================= UI ================= */
 
   return (
-    <div style={styles.page}>
-      <h2>🧾 Billing</h2>
+    <div className="container-fluid p-3">
 
-      {/* SCANNER */}
-      <div style={styles.card}>
-        {!scannerOn ? (
-          <button
-            style={styles.scanBtn}
-            onClick={() => setScannerOn(true)}
-          >
-            📷 Start Scanner
-          </button>
-        ) : (
-          <button
-            style={styles.stopBtn}
-            onClick={() => setScannerOn(false)}
-          >
-            ❌ Stop Scanner
-          </button>
-        )}
+      <div className="card shadow rounded-4 border-0">
 
-        {scannerOn && (
-          <div
-            id="scanner"
-            ref={scannerRef}
-            style={styles.scannerBox}
-          />
-        )}
-      </div>
-
-      {/* MANUAL SEARCH */}
-      <input
-        style={styles.search}
-        placeholder="Search product"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
-      {search && (
-        <div style={styles.dropdown}>
-          {products
-            .filter(
-              (p) =>
-                p.name.toLowerCase().includes(search.toLowerCase()) ||
-                p.barcode.includes(search)
-            )
-            .slice(0, 5)
-            .map((p) => (
-              <div
-                key={p._id}
-                style={styles.item}
-                onClick={() => addItem(p)}
-              >
-                {p.name} | ₹{p.price}
-              </div>
-            ))}
+        {/* HEADER */}
+        <div className="card-header bg-primary text-white fw-bold">
+          🧾 Billing System
         </div>
-      )}
 
-      {/* BILL TABLE */}
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>₹</th>
-            <th>Qty</th>
-            <th>Total</th>
-            <th />
-          </tr>
-        </thead>
+        <div className="card-body">
 
-        <tbody>
-          {items.map((i) => (
-            <tr key={i.barcode}>
-              <td>{i.name}</td>
-              <td>{i.price}</td>
+          {/* SCANNER */}
+          <div className="mb-3 text-center">
 
-              <td>
-                <input
-                  type="number"
-                  value={i.quantity}
-                  min="1"
-                  onChange={(e) =>
-                    changeQty(i.barcode, +e.target.value)
-                  }
-                  style={styles.qty}
-                />
-              </td>
+            {!scannerOn ? (
+              <button
+                className="btn btn-primary w-100 mb-2"
+                onClick={() => setScannerOn(true)}
+              >
+                📷 Start Scanner
+              </button>
+            ) : (
+              <button
+                className="btn btn-danger w-100 mb-2"
+                onClick={() => setScannerOn(false)}
+              >
+                ❌ Stop Scanner
+              </button>
+            )}
 
-              <td>₹{i.price * i.quantity}</td>
+            {scannerOn && (
+              <div
+                id="scanner"
+                ref={scannerRef}
+                className="mx-auto mt-2"
+                style={{ maxWidth: 280 }}
+              />
+            )}
 
-              <td>
-                <button
-                  style={styles.remove}
-                  onClick={() => removeItem(i.barcode)}
-                >
-                  X
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </div>
 
-      <h3>Total: ₹{total}</h3>
+          {/* SEARCH */}
+          <div className="mb-3 position-relative">
 
-      {/* PAYMENT */}
-      <div>
-        <label>
-          <input
-            type="radio"
-            value="cash"
-            checked={paymentMethod === "cash"}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-          />
-          Cash
-        </label>
+            <input
+              className="form-control"
+              placeholder="🔍 Search product name / barcode"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
 
-        &nbsp;&nbsp;
+            {search && (
+              <div className="list-group position-absolute w-100 shadow z-3">
 
-        <label>
-          <input
-            type="radio"
-            value="upi"
-            checked={paymentMethod === "upi"}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-          />
-          UPI
-        </label>
+                {products
+                  .filter(
+                    (p) =>
+                      p.name
+                        .toLowerCase()
+                        .includes(search.toLowerCase()) ||
+                      p.barcode.includes(search)
+                  )
+                  .slice(0, 5)
+                  .map((p) => (
+                    <button
+                      key={p._id}
+                      className="list-group-item list-group-item-action"
+                      onClick={() => addItem(p)}
+                    >
+                      {p.name} — ₹{p.price}
+                    </button>
+                  ))}
+              </div>
+            )}
+
+          </div>
+
+          {/* BILL TABLE */}
+          <div className="table-responsive mb-3">
+
+            <table className="table table-bordered table-hover text-center align-middle">
+
+              <thead className="table-dark">
+                <tr>
+                  <th>Item</th>
+                  <th>₹</th>
+                  <th>Qty</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-muted py-3">
+                      No items added
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((i) => (
+                    <tr key={i.barcode}>
+
+                      <td>{i.name}</td>
+
+                      <td>{i.price}</td>
+
+                      <td style={{ maxWidth: 90 }}>
+                        <input
+                          type="number"
+                          min="1"
+                          className="form-control form-control-sm text-center"
+                          value={i.quantity}
+                          onChange={(e) =>
+                            changeQty(
+                              i.barcode,
+                              +e.target.value
+                            )
+                          }
+                        />
+                      </td>
+
+                      <td className="fw-bold">
+                        ₹{i.price * i.quantity}
+                      </td>
+
+                      <td>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => removeItem(i.barcode)}
+                        >
+                          ✖
+                        </button>
+                      </td>
+
+                    </tr>
+                  ))
+                )}
+              </tbody>
+
+            </table>
+
+          </div>
+
+          {/* TOTAL */}
+          <div className="d-flex justify-content-between fs-5 fw-bold mb-3">
+            <span>Total</span>
+            <span>₹{total}</span>
+          </div>
+
+          {/* PAYMENT */}
+          <div className="mb-3">
+
+            <label className="me-3">
+              <input
+                type="radio"
+                value="cash"
+                checked={paymentMethod === "cash"}
+                onChange={(e) =>
+                  setPaymentMethod(e.target.value)
+                }
+              />{" "}
+              Cash
+            </label>
+
+            <label>
+              <input
+                type="radio"
+                value="upi"
+                checked={paymentMethod === "upi"}
+                onChange={(e) =>
+                  setPaymentMethod(e.target.value)
+                }
+              />{" "}
+              UPI
+            </label>
+
+          </div>
+
+          {/* GENERATE */}
+          <button
+            className="btn btn-success w-100 fw-bold"
+            onClick={generateBill}
+          >
+            ✅ Generate Bill
+          </button>
+
+        </div>
       </div>
-
-      <button style={styles.billBtn} onClick={generateBill}>
-        Generate Bill
-      </button>
     </div>
   );
 };
 
 export default Billing;
-
-/* ================= STYLES ================= */
-
-const styles = {
-  page: {
-    padding: 16,
-    background: "#f8fafc",
-    minHeight: "100vh",
-  },
-
-  card: {
-    background: "#fff",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-
-  scanBtn: {
-    width: "100%",
-    padding: 10,
-    background: "#2563eb",
-    color: "#fff",
-    border: "none",
-    fontWeight: "600",
-  },
-
-  stopBtn: {
-    width: "100%",
-    padding: 10,
-    background: "#dc2626",
-    color: "#fff",
-    border: "none",
-  },
-
-  scannerBox: {
-    marginTop: 10,
-    width: "100%",
-  },
-
-  search: {
-    width: "100%",
-    padding: 10,
-    marginBottom: 6,
-  },
-
-  dropdown: {
-    background: "#fff",
-    border: "1px solid #ccc",
-  },
-
-  item: {
-    padding: 8,
-    cursor: "pointer",
-  },
-
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    marginTop: 10,
-  },
-
-  qty: {
-    width: 50,
-  },
-
-  remove: {
-    background: "red",
-    color: "#fff",
-    border: "none",
-    padding: "3px 6px",
-  },
-
-  billBtn: {
-    width: "100%",
-    padding: 12,
-    background: "green",
-    color: "#fff",
-    border: "none",
-    fontSize: 16,
-    marginTop: 10,
-  },
-};

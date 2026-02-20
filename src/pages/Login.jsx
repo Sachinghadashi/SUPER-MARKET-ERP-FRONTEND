@@ -13,9 +13,11 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  /* Remember Me */
+  /* ================= REMEMBER ME ================= */
+
   useEffect(() => {
     const saved = localStorage.getItem("rememberUser");
+
     if (saved) {
       const data = JSON.parse(saved);
       setEmail(data.email);
@@ -23,6 +25,8 @@ const Login = () => {
       setRemember(true);
     }
   }, []);
+
+  /* ================= LOGIN ================= */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,224 +52,148 @@ const Login = () => {
       if (res.data.role === "admin") navigate("/admin");
       else navigate("/cashier");
     } catch {
-      setError("Invalid email or password");
+      setError("❌ Invalid email or password");
     }
   };
 
+  /* ================= UI ================= */
+
   return (
-    <div style={styles.page}>
+    <div className="min-vh-100 d-flex flex-column bg-light">
       {/* ================= HEADER ================= */}
-      <header style={styles.header}>
-        <div style={styles.headerContainer}>
-          <h2 style={styles.logo}>
-            🏪 Supermarket ERP
-          </h2>
-        </div>
-      </header>
+
+      <nav className="navbar navbar-dark bg-dark px-3">
+        <span className="navbar-brand fw-bold">
+          🏪 Dilraj Kirana Store Management System
+        </span>
+      </nav>
 
       {/* ================= MAIN ================= */}
-      <main style={styles.main}>
-        <div style={styles.card}>
-          <h3 style={styles.title}>
-            Welcome Back 👋
-          </h3>
 
-          {error && (
-            <div style={styles.error}>{error}</div>
-          )}
+      <div className="container flex-grow-1 d-flex justify-content-center align-items-center">
+        <div className="row w-100 justify-content-center">
+          <div className="col-12 col-sm-10 col-md-6 col-lg-4">
+            <div className="card shadow-lg border-0 rounded-4 p-4">
+              <h3 className="text-center fw-bold mb-2">
+                Welcome To Dilraj Kirana Store
+              </h3>
 
-          <form onSubmit={handleSubmit}>
-            <div style={styles.inputGroup}>
-              <label>Email</label>
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
-                }
-                required
-              />
-            </div>
+              <p className="text-center text-muted mb-4">
+                Login to continue
+              </p>
 
-            <div style={styles.inputGroup}>
-              <label>Password</label>
+              {/* ERROR */}
+              {error && (
+                <div className="alert alert-danger py-2 text-center">
+                  {error}
+                </div>
+              )}
 
-              <div style={styles.passwordBox}>
-                <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  required
-                />
+              {/* FORM */}
+              <form onSubmit={handleSubmit}>
+                {/* EMAIL */}
+                <div className="mb-3">
+                  <label className="form-label">
+                    Email
+                  </label>
 
-                <span
-                  style={styles.eye}
-                  onClick={() =>
-                    setShowPassword(!showPassword)
-                  }
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="Enter email"
+                    value={email}
+                    onChange={(e) =>
+                      setEmail(e.target.value)
+                    }
+                    required
+                  />
+                </div>
+
+                {/* PASSWORD */}
+                <div className="mb-3">
+                  <label className="form-label">
+                    Password
+                  </label>
+
+                  <div className="input-group">
+                    <input
+                      type={
+                        showPassword
+                          ? "text"
+                          : "password"
+                      }
+                      className="form-control"
+                      placeholder="Enter password"
+                      value={password}
+                      onChange={(e) =>
+                        setPassword(e.target.value)
+                      }
+                      required
+                    />
+
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() =>
+                        setShowPassword(!showPassword)
+                      }
+                    >
+                      {showPassword ? "🙈" : "👁️"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* REMEMBER */}
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="form-check">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={remember}
+                      onChange={() =>
+                        setRemember(!remember)
+                      }
+                      id="remember"
+                    />
+
+                    <label
+                      className="form-check-label"
+                      htmlFor="remember"
+                    >
+                      Remember Me
+                    </label>
+                  </div>
+
+                  {/* FUTURE: Forgot password */}
+                  {/* <span className="text-muted small">
+                    🔥 Forgot?
+                  </span> */}
+                </div>
+
+                {/* LOGIN BUTTON */}
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100 fw-bold py-2"
                 >
-                  {showPassword ? "🙈" : "👁️"}
-                </span>
-              </div>
+                  🔐 Login
+                </button>
+              </form>
             </div>
-
-            <div style={styles.row}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={() =>
-                    setRemember(!remember)
-                  }
-                />{" "}
-                Remember Me
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              style={styles.loginBtn}
-            >
-              🔐 Login
-            </button>
-          </form>
+          </div>
         </div>
-      </main>
+      </div>
 
       {/* ================= FOOTER ================= */}
-      <footer style={styles.footer}>
-        <div style={styles.footerContainer}>
-          © {new Date().getFullYear()} Dilraj
-          Kirana Store
-          <br />
-          Built with ❤️ by Prabhakar
-          Technologies
-        </div>
+
+      <footer className="bg-white text-center py-2 small text-muted border-top">
+        © {new Date().getFullYear()} Dilraj
+        Kirana Store
+        <br />
+        Built with ❤️ by Prabhakar
+        Technologies
       </footer>
     </div>
   );
 };
 
 export default Login;
-
-/* ================= STYLES ================= */
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    background:
-      "linear-gradient(135deg, #2563eb, #0f172a)",
-  },
-
-  /* HEADER */
-  header: {
-    background: "#0f172a",
-    padding: "14px 20px",
-  },
-
-  headerContainer: {
-    maxWidth: 1200,
-    margin: "0 auto",
-  },
-
-  logo: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: 700,
-    margin: 0,
-  },
-
-  /* MAIN */
-  main: {
-    flex: 1,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-
-  /* CARD */
-  card: {
-    width: "100%",
-    maxWidth: 380,
-    background: "#ffffff",
-    padding: 30,
-    borderRadius: 16,
-    boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
-  },
-
-  title: {
-    textAlign: "center",
-    marginBottom: 20,
-    fontSize: 22,
-  },
-
-  inputGroup: {
-    display: "flex",
-    flexDirection: "column",
-    marginBottom: 16,
-  },
-
-  passwordBox: {
-    position: "relative",
-  },
-
-  eye: {
-    position: "absolute",
-    right: 10,
-    top: 10,
-    cursor: "pointer",
-  },
-
-  row: {
-    marginBottom: 16,
-    fontSize: 13,
-  },
-
-  loginBtn: {
-    width: "100%",
-    padding: 14,
-    borderRadius: 8,
-    border: "none",
-    background:
-      "linear-gradient(to right, #4f46e5, #2563eb)",
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-
-  error: {
-    background: "#fee2e2",
-    color: "#b91c1c",
-    padding: 8,
-    borderRadius: 6,
-    marginBottom: 12,
-    textAlign: "center",
-    fontSize: 13,
-  },
-
-  /* FOOTER */
-  footer: {
-    background: "#0f172a",
-    color: "#94a3b8",
-    textAlign: "center",
-    padding: 14,
-    fontSize: 12,
-  },
-
-  footerContainer: {
-    maxWidth: 1200,
-    margin: "0 auto",
-  },
-};

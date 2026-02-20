@@ -3,6 +3,8 @@ import API from "../api/api";
 
 const TodayBills = () => {
   const [bills, setBills] = useState([]);
+  const [filteredBills, setFilteredBills] = useState([]);
+  const [search, setSearch] = useState("");
   const [selectedBill, setSelectedBill] = useState(null);
 
   useEffect(() => {
@@ -23,10 +25,36 @@ const TodayBills = () => {
       );
 
       setBills(todayBills);
+      setFilteredBills(todayBills);
     } catch {
       alert("Failed to load today bills");
     }
   };
+
+  /* ================= SEARCH ================= */
+
+  useEffect(() => {
+    if (!search) {
+      setFilteredBills(bills);
+      return;
+    }
+
+    const text = search.toLowerCase();
+
+    const filtered = bills.filter((b) => {
+      return (
+        b.billNumber?.toLowerCase().includes(text) ||
+        b.paymentMethod?.toLowerCase().includes(text) ||
+        String(b.totalAmount).includes(text) ||
+        new Date(b.createdAt)
+          .toLocaleTimeString()
+          .toLowerCase()
+          .includes(text)
+      );
+    });
+
+    setFilteredBills(filtered);
+  }, [search, bills]);
 
   /* ================= VIEW BILL ================= */
 
@@ -64,32 +92,49 @@ Date: ${new Date(bill.createdAt).toLocaleString()}
     );
   };
 
+  /* ================= UI ================= */
+
   return (
-    <div style={styles.card}>
-      <h3 style={styles.title}>📅 Today’s Bills</h3>
+    <div className="card shadow-sm border-0 rounded-4 p-3">
 
-      {/* ================= TABLE ================= */}
+      {/* HEADER */}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+        <h4 className="fw-bold text-primary mb-0">
+          📅 Today’s Bills
+        </h4>
 
-      <div style={styles.tableWrapper}>
-        <table style={styles.table}>
-          <thead>
+        {/* SEARCH */}
+        <input
+          type="text"
+          className="form-control w-100 w-md-50"
+          placeholder="🔍 Search bill..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ maxWidth: 300 }}
+        />
+      </div>
+
+      {/* TABLE */}
+      <div className="table-responsive">
+        <table className="table table-bordered table-hover align-middle text-center">
+          <thead className="table-dark">
             <tr>
               <th>Time</th>
-              <th>Total</th>
+              <th>Total (₹)</th>
               <th>Payment</th>
-              <th>Actions</th>
+              <th width="200">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {bills.length === 0 ? (
+            {filteredBills.length === 0 ? (
               <tr>
-                <td colSpan="4" style={styles.empty}>
-                  No bills today
+                <td colSpan="4" className="text-muted py-3">
+                  No matching bills found
                 </td>
               </tr>
             ) : (
-              bills.map((b) => (
+              filteredBills.map((b) => (
                 <tr key={b._id}>
                   <td>
                     {new Date(
@@ -97,20 +142,26 @@ Date: ${new Date(bill.createdAt).toLocaleString()}
                     ).toLocaleTimeString()}
                   </td>
 
-                  <td>₹{b.totalAmount}</td>
+                  <td className="fw-bold">
+                    ₹{b.totalAmount}
+                  </td>
 
-                  <td>{b.paymentMethod}</td>
+                  <td>
+                    <span className="badge bg-info text-dark">
+                      {b.paymentMethod}
+                    </span>
+                  </td>
 
-                  <td style={styles.actionCell}>
+                  <td>
                     <button
-                      style={styles.viewBtn}
+                      className="btn btn-sm btn-primary me-2 mb-1"
                       onClick={() => openBill(b)}
                     >
                       👁 View
                     </button>
 
                     <button
-                      style={styles.whatsappBtn}
+                      className="btn btn-sm btn-success mb-1"
                       onClick={() => sendWhatsApp(b)}
                     >
                       💬 WhatsApp
@@ -123,167 +174,94 @@ Date: ${new Date(bill.createdAt).toLocaleString()}
         </table>
       </div>
 
-      {/* ================= BILL MODAL ================= */}
+      {/* ================= MODAL ================= */}
 
       {selectedBill && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
+        <div
+          className="modal fade show d-block"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content rounded-4">
 
-            <h3>🧾 Bill Receipt</h3>
+              {/* Header */}
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">
+                  🧾 Bill Receipt
+                </h5>
 
-            <p>
-              <b>Bill No:</b>{" "}
-              {selectedBill.billNumber}
-            </p>
-
-            <p>
-              <b>Date:</b>{" "}
-              {new Date(
-                selectedBill.createdAt
-              ).toLocaleString()}
-            </p>
-
-            <p>
-              <b>Payment:</b>{" "}
-              {selectedBill.paymentMethod}
-            </p>
-
-            <hr />
-
-            {selectedBill.items.map((i, idx) => (
-              <div key={idx} style={styles.itemRow}>
-                <span>
-                  {i.name} x{i.quantity}
-                </span>
-                <span>₹{i.total}</span>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={closeBill}
+                />
               </div>
-            ))}
 
-            <hr />
+              {/* Body */}
+              <div className="modal-body">
 
-            <div style={styles.totalRow}>
-              <b>Total</b>
-              <b>₹{selectedBill.totalAmount}</b>
+                <p>
+                  <b>Bill No:</b>{" "}
+                  {selectedBill.billNumber}
+                </p>
+
+                <p>
+                  <b>Date:</b>{" "}
+                  {new Date(
+                    selectedBill.createdAt
+                  ).toLocaleString()}
+                </p>
+
+                <p>
+                  <b>Payment:</b>{" "}
+                  {selectedBill.paymentMethod}
+                </p>
+
+                <hr />
+
+                {/* Items */}
+                {selectedBill.items.map((i, idx) => (
+                  <div
+                    key={idx}
+                    className="d-flex justify-content-between mb-1"
+                  >
+                    <span>
+                      {i.name} x{i.quantity}
+                    </span>
+
+                    <span>
+                      ₹{i.total}
+                    </span>
+                  </div>
+                ))}
+
+                <hr />
+
+                <div className="d-flex justify-content-between fs-5 fw-bold">
+                  <span>Total</span>
+                  <span>
+                    ₹{selectedBill.totalAmount}
+                  </span>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary w-100"
+                  onClick={closeBill}
+                >
+                  Close
+                </button>
+              </div>
+
             </div>
-
-            <button
-              style={styles.closeBtn}
-              onClick={closeBill}
-            >
-              Close
-            </button>
           </div>
         </div>
       )}
+
     </div>
   );
 };
 
 export default TodayBills;
-
-/* ================= STYLES ================= */
-
-const styles = {
-  card: {
-    background: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
-  },
-
-  title: {
-    marginBottom: 14,
-    fontSize: 18,
-    fontWeight: 600,
-  },
-
-  tableWrapper: {
-    width: "100%",
-    overflowX: "auto",
-  },
-
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    fontSize: 14,
-  },
-
-  empty: {
-    textAlign: "center",
-    padding: 14,
-    color: "#64748b",
-  },
-
-  actionCell: {
-    display: "flex",
-    gap: 6,
-    flexWrap: "wrap",
-  },
-
-  viewBtn: {
-    background: "#2563eb",
-    color: "#fff",
-    border: "none",
-    padding: "6px 10px",
-    borderRadius: 6,
-    cursor: "pointer",
-    fontSize: 13,
-  },
-
-  whatsappBtn: {
-    background: "#22c55e",
-    color: "#fff",
-    border: "none",
-    padding: "6px 10px",
-    borderRadius: 6,
-    cursor: "pointer",
-    fontSize: 13,
-  },
-
-  /* ================= MODAL ================= */
-
-  modalOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 999,
-  },
-
-  modal: {
-    background: "#fff",
-    width: "90%",
-    maxWidth: 400,
-    padding: 20,
-    borderRadius: 12,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-  },
-
-  itemRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    fontSize: 14,
-    marginBottom: 4,
-  },
-
-  totalRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    fontSize: 16,
-    marginTop: 8,
-  },
-
-  closeBtn: {
-    width: "100%",
-    marginTop: 14,
-    padding: 10,
-    border: "none",
-    background: "#dc2626",
-    color: "#fff",
-    borderRadius: 6,
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-};

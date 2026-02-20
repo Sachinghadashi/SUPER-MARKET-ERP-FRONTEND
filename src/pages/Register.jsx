@@ -18,7 +18,10 @@ const Register = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -40,292 +43,183 @@ const Register = () => {
   };
 
   return (
-    <div style={darkMode ? styles.pageDark : styles.page}>
-      <div style={darkMode ? styles.cardDark : styles.card}>
+    <div
+      className={`min-vh-100 d-flex flex-column ${
+        darkMode ? "bg-dark text-light" : "bg-light"
+      }`}
+    >
+      {/* HEADER */}
+      <nav
+        className={`navbar ${
+          darkMode
+            ? "navbar-dark bg-black"
+            : "navbar-dark bg-dark"
+        } px-3`}
+      >
+        <span className="navbar-brand fw-bold">
+          🏪 Dilraj Kirana Store Management System
+        </span>
 
-        {/* Header */}
-        <div style={styles.header}>
-          <div>
-            <h2 style={darkMode ? styles.titleDark : styles.title}>
-              🏪 Supermarket ERP
-            </h2>
-            <p style={styles.subtitle}>Create New Account</p>
-          </div>
+        <button
+          className="btn btn-sm btn-outline-light"
+          onClick={() => setDarkMode(!darkMode)}
+        >
+          {darkMode ? "☀️" : "🌙"}
+        </button>
+      </nav>
 
-          <button
-            style={styles.modeBtn}
-            onClick={() => setDarkMode(!darkMode)}
-          >
-            {darkMode ? "☀️" : "🌙"}
-          </button>
-        </div>
-
-        {/* Messages */}
-        {error && <div style={styles.errorBox}>{error}</div>}
-        {success && <div style={styles.successBox}>{success}</div>}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={styles.form}>
-
-          <label style={styles.label}>Full Name</label>
-          <input
-            style={darkMode ? styles.inputDark : styles.input}
-            name="name"
-            placeholder="Enter full name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-
-          <label style={styles.label}>Email</label>
-          <input
-            style={darkMode ? styles.inputDark : styles.input}
-            type="email"
-            name="email"
-            placeholder="Enter email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-
-          <label style={styles.label}>Password</label>
-
-          <div style={styles.passwordWrapper}>
-            <input
-              style={darkMode ? styles.inputDark : styles.input}
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Enter password"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
-
-            <span
-              style={styles.eye}
-              onClick={() => setShowPassword(!showPassword)}
+      {/* MAIN */}
+      <div className="container flex-grow-1 d-flex justify-content-center align-items-center">
+        <div className="row w-100 justify-content-center">
+          <div className="col-12 col-sm-10 col-md-6 col-lg-4">
+            <div
+              className={`card shadow-lg border-0 rounded-4 p-4 ${
+                darkMode
+                  ? "bg-dark text-light"
+                  : ""
+              }`}
             >
-              {showPassword ? "Hide" : "Show"}
-            </span>
+              <h3 className="text-center fw-bold mb-2">
+                Create Account
+              </h3>
+
+              <p className="text-center text-muted mb-4">
+                Add new user to system
+              </p>
+
+              {/* Messages */}
+              {error && (
+                <div className="alert alert-danger py-2 text-center">
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="alert alert-success py-2 text-center">
+                  {success}
+                </div>
+              )}
+
+              {/* FORM */}
+              <form onSubmit={handleSubmit}>
+                {/* Name */}
+                <div className="mb-3">
+                  <label className="form-label">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="name"
+                    placeholder="Enter full name"
+                    value={form.name}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="mb-3">
+                  <label className="form-label">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    name="email"
+                    placeholder="Enter email"
+                    value={form.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="mb-3">
+                  <label className="form-label">
+                    Password
+                  </label>
+
+                  <div className="input-group">
+                    <input
+                      type={
+                        showPassword
+                          ? "text"
+                          : "password"
+                      }
+                      className="form-control"
+                      name="password"
+                      placeholder="Enter password"
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                    />
+
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() =>
+                        setShowPassword(!showPassword)
+                      }
+                    >
+                      {showPassword
+                        ? "🙈"
+                        : "👁️"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Role */}
+                <div className="mb-3">
+                  <label className="form-label">
+                    Role
+                  </label>
+                  <select
+                    className="form-select"
+                    name="role"
+                    value={form.role}
+                    onChange={handleChange}
+                  >
+                    <option value="cashier">
+                      Cashier
+                    </option>
+                    <option value="admin">
+                      Admin
+                    </option>
+                  </select>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100 fw-bold"
+                >
+                  ➕ Create User
+                </button>
+              </form>
+
+              {/* Footer Link */}
+              <div className="text-center mt-3 small">
+                Already registered?{" "}
+                <Link to="/login">
+                  Login
+                </Link>
+              </div>
+            </div>
           </div>
-
-          <label style={styles.label}>Role</label>
-
-          <select
-            style={darkMode ? styles.selectDark : styles.select}
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-          >
-            <option value="cashier">Cashier</option>
-            <option value="admin">Admin</option>
-          </select>
-
-          <button style={styles.button} type="submit">
-            ➕ Create User
-          </button>
-
-        </form>
-
-        {/* Footer */}
-        <p style={styles.footer}>
-          Already registered?{" "}
-          <Link to="/login" style={styles.link}>
-            Login
-          </Link>
-        </p>
-
+        </div>
       </div>
+
+      {/* FOOTER */}
+      <footer className="bg-white text-center py-2 small text-muted border-top">
+        © {new Date().getFullYear()} Dilraj
+        Kirana Store
+        <br />
+        Built with ❤️ by Prabhakar
+        Technologies
+      </footer>
     </div>
   );
 };
 
 export default Register;
-
-/* ================= STYLES ================= */
-
-const styles = {
-
-  /* Page */
-
-  page: {
-    minHeight: "100vh",
-    padding: "16px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#f1f5f9",
-  },
-
-  pageDark: {
-    minHeight: "100vh",
-    padding: "16px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#020617",
-  },
-
-  /* Card */
-
-  card: {
-    width: "100%",
-    maxWidth: "420px",
-    background: "#ffffff",
-    padding: "26px",
-    borderRadius: "14px",
-    boxShadow: "0 12px 28px rgba(0,0,0,0.15)",
-  },
-
-  cardDark: {
-    width: "100%",
-    maxWidth: "420px",
-    background: "#020617",
-    padding: "26px",
-    borderRadius: "14px",
-    boxShadow: "0 12px 28px rgba(0,0,0,0.5)",
-  },
-
-  /* Header */
-
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "18px",
-  },
-
-  title: {
-    fontSize: "22px",
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-
-  titleDark: {
-    fontSize: "22px",
-    fontWeight: "700",
-    color: "#e5e7eb",
-  },
-
-  subtitle: {
-    fontSize: "13px",
-    color: "#64748b",
-  },
-
-  modeBtn: {
-    border: "none",
-    background: "transparent",
-    fontSize: "18px",
-    cursor: "pointer",
-  },
-
-  /* Form */
-
-  form: {
-    display: "flex",
-    flexDirection: "column",
-  },
-
-  label: {
-    fontSize: "13px",
-    marginBottom: "5px",
-    color: "#64748b",
-  },
-
-  input: {
-    padding: "12px",
-    borderRadius: "7px",
-    border: "1px solid #cbd5e1",
-    fontSize: "14px",
-    marginBottom: "14px",
-  },
-
-  inputDark: {
-    padding: "12px",
-    borderRadius: "7px",
-    border: "1px solid #334155",
-    background: "#020617",
-    color: "#fff",
-    fontSize: "14px",
-    marginBottom: "14px",
-  },
-
-  select: {
-    padding: "12px",
-    borderRadius: "7px",
-    border: "1px solid #cbd5e1",
-    fontSize: "14px",
-    marginBottom: "18px",
-  },
-
-  selectDark: {
-    padding: "12px",
-    borderRadius: "7px",
-    border: "1px solid #334155",
-    background: "#020617",
-    color: "#fff",
-    fontSize: "14px",
-    marginBottom: "18px",
-  },
-
-  passwordWrapper: {
-    position: "relative",
-  },
-
-  eye: {
-    position: "absolute",
-    right: "12px",
-    top: "12px",
-    fontSize: "12px",
-    color: "#6366f1",
-    cursor: "pointer",
-  },
-
-  /* Button */
-
-  button: {
-    padding: "13px",
-    borderRadius: "8px",
-    border: "none",
-    background: "#4f46e5",
-    color: "#fff",
-    fontSize: "15px",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-
-  /* Messages */
-
-  errorBox: {
-    background: "#fee2e2",
-    color: "#991b1b",
-    padding: "10px",
-    borderRadius: "6px",
-    fontSize: "13px",
-    marginBottom: "12px",
-  },
-
-  successBox: {
-    background: "#dcfce7",
-    color: "#166534",
-    padding: "10px",
-    borderRadius: "6px",
-    fontSize: "13px",
-    marginBottom: "12px",
-  },
-
-  /* Footer */
-
-  footer: {
-    marginTop: "18px",
-    textAlign: "center",
-    fontSize: "13px",
-    color: "#64748b",
-  },
-
-  link: {
-    color: "#4f46e5",
-    fontWeight: "600",
-    textDecoration: "none",
-  },
-};

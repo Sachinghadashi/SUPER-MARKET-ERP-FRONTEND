@@ -8,101 +8,72 @@ const CashierDashboard = () => {
   const { logout, user } = useAuth();
 
   return (
-    <div style={styles.page}>
+    <div className="container-fluid bg-light min-vh-100 p-3">
+
       {/* ================= HEADER ================= */}
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>💳 Cashier Dashboard</h1>
+      <div className="card shadow-sm border-0 rounded-4 mb-4">
 
-          <p style={styles.subtitle}>
-            Welcome, <b>{user?.name}</b>
-          </p>
+        <div className="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+
+          {/* Title */}
+          <div>
+            <h3 className="fw-bold mb-1 text-primary">
+              💳 Cashier Dashboard
+            </h3>
+
+            <p className="text-muted mb-0">
+              Welcome, <b>{user?.name}</b>
+            </p>
+          </div>
+
+          {/* Logout */}
+          {/* <button
+            className="btn btn-outline-danger mt-3 mt-md-0"
+            onClick={logout}
+          >
+            ⏻ Logout
+          </button> */}
+
         </div>
-
-        {/* <button
-          style={styles.logoutBtn}
-          onClick={logout}
-        >
-          ⏻ Logout
-        </button> */}
       </div>
 
       {/* ================= BILLING ================= */}
-      <div style={styles.card}>
-        <Billing />
+      <div className="card shadow-sm border-0 rounded-4 mb-4">
+
+        <div className="card-body p-3 p-md-4">
+          <Billing />
+        </div>
+
       </div>
 
       {/* ================= TODAY BILLS ================= */}
-      <div style={styles.card}>
-        <TodayBills />
+      <div className="card shadow-sm border-0 rounded-4 mb-4">
+
+        <div className="card-header bg-primary text-white fw-bold rounded-top-4">
+          📅 Today’s Bills
+        </div>
+
+        <div className="card-body p-3 p-md-4">
+          <TodayBills />
+        </div>
+
       </div>
 
       {/* ================= HISTORY ================= */}
-      <div style={styles.card}>
-        <MyBillsHistory />
+      <div className="card shadow-sm border-0 rounded-4 mb-4">
+
+        <div className="card-header bg-success text-white fw-bold rounded-top-4">
+          📜 My Bills History
+        </div>
+
+        <div className="card-body p-3 p-md-4">
+          <MyBillsHistory />
+        </div>
+
       </div>
+
     </div>
   );
 };
 
 export default CashierDashboard;
-
-/* ================= STYLES ================= */
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    padding: 16,
-    background: "#f1f5f9",
-  },
-
-  /* HEADER */
-
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 20,
-  },
-
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-
-  subtitle: {
-    fontSize: 13,
-    color: "#64748b",
-  },
-
-  logoutBtn: {
-    background: "#dc2626",
-    color: "#fff",
-    border: "none",
-    padding: "8px 14px",
-    borderRadius: 6,
-    fontSize: 13,
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-
-  /* CARDS */
-
-  card: {
-    background: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 18,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-  },
-
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 10,
-    color: "#1e293b",
-  },
-};
